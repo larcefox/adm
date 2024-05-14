@@ -1,0 +1,14 @@
+.error {
+    color: red;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  
+  a {
+    text-decoration: none;
+  }
+
+  .dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0; /* remove the gap so it doesn't close */
+}
