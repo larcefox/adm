@@ -150,3 +150,6 @@ article.md
 .vscode
 .idea
 __pycache__
+
+# env file
+.env
