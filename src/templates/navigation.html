@@ -1,0 +1,41 @@
+<!-- Navigation -->
+<header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+  
+    <div class="container-fluid">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+          <img class="bi me-2" width="40" height="40" src={{ url_for('static', filename='images/favicon.ico') }}>
+          <span class="fs-4">IDM</span>
+        </a>
+
+        <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+          {% if current_user.is_authenticated %}
+          <li class="nav-item"><a href="{{ url_for('core.home') }}" class="nav-link px-4 link-secondary" aria-current="page">Главная</a></li>
+          <li class="nav-item">
+            <a href="#" class="nav-link px-4 link-dark">
+              <span data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Меню</span>
+            </a></li>
+          <li class="nav-item dropdown">
+            <a href="#" class="nav-link px-4 link-dark" id='mylink'>
+              Территориальное деление
+            </a></li>
+          <li class="nav-item"><a href="#" class="nav-link px-4 link-dark" id="get_cam_pos">VIP-генеалогия</a></li>
+          {% if is_admin %}
+          <li class="nav-item"><a href="admin" class="nav-link px-4 link-dark">Администратор</a></li>
+          {% endif %}
+          {% endif %}
+        </ul>
+  
+        <div class="text-end">
+          {% if current_user.is_authenticated %}
+          <a href="{{ url_for('accounts.logout') }}"><button type="button" class="btn btn-secondary me-2">Выйти</button></a>
+          {% else %}
+            <a href="{{ url_for('accounts.login') }}"><button type="button" class="btn btn-outline-dark">Войти</button></a>
+            <a href="{{ url_for('accounts.register') }}"><button type="button" class="btn btn-secondary">Регистрация</button></a>
+          {% endif %}
+            
+        </div>
+      </div>
+    </div>
+  </header>
