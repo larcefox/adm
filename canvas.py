@@ -3,7 +3,8 @@ import json
 import math
 from domains.entity_class import Entity_fabric as ef
 from domains.entity_class import Entity
-import random
+from domains.model_class import ModelFabric as mf
+from domains.model_class import Model
 
 
 def send_data():
@@ -24,6 +25,8 @@ def send_data():
             )
 
     box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
+    
+    model = mf.create('model_obj', position={'x': 17, 'y': 17, 'z': 17}, path='cat/scene.gltf')
 
     # sphere = Entity_fabric.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
 
@@ -77,11 +80,16 @@ def send_data():
             figure.name:
             figure.return_dict() for figure in Entity.manager.get_entity_list('figure')
             }
+    models = {
+            model.name:
+            model.return_dict() for model in Model.manager.get_model_list('model_obj')
+            }
 
     return {
             'camera': camera.return_dict(), 
             'lights': json.dumps(lights),
             'shape': json.dumps(shapes),
             'line': json.dumps(lines),
-            'figure': json.dumps(figures)
+            'figure': json.dumps(figures),
+            'model': json.dumps(models)
             }

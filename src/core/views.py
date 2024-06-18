@@ -8,7 +8,7 @@ from lib.reload_canvas import Worker
 core_bp = Blueprint("core", __name__)
 
 reloader = Worker()
-entity_dict = reloader.run_reload()
+objects_dict = reloader.run_reload()
 
 @core_bp.route("/")
 @login_required
@@ -20,13 +20,19 @@ def home():
                             is_admin=is_admin,
                             title='EIM 3d prototipe',
                             body='body',
-                            light=entity_dict['lights'], 
-                            camera=entity_dict['camera'], 
-                            entity=entity_dict['shape'],
-                            line=entity_dict['line'],
-                            figure=entity_dict['figure']
+                            light=objects_dict['lights'], 
+                            camera=objects_dict['camera'], 
+                            entity=objects_dict['shape'],
+                            line=objects_dict['line'],
+                            figure=objects_dict['figure'],
+                            model=objects_dict['model']
                             )
 
 @core_bp.route('/entitys', methods=['GET'])
 def get_entitys():
-    return entity_dict['shape']
+    return objects_dict['shape']
+
+core_bp.route("/ws")
+@login_required
+def ws():
+    return render_template("core/websocket.js")

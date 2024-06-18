@@ -26,6 +26,8 @@ class Entity_manager():
             self.line_list.append(entity_class)
         elif entity_type == 'figure':
             self.figure_list.append(entity_class)
+        else:
+            print("Error! Wrong entity type!")
 
     def clear_entity_list(self) -> None:
         for i in self.entity_list: del i
@@ -36,6 +38,12 @@ class Entity_manager():
 
         for i in self.light_list: del i
         self.light_list.clear()
+        
+        for i in self.light_list: del i
+        self.line_list.clear()
+        
+        for i in self.light_list: del i
+        self.figure_list.clear()
 
     def get_entity_list(self, entity_type):
         if entity_type == 'shape':
