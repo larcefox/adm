@@ -4,6 +4,7 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 
+
 var timer = new Timer();
 var cur_tick;
 var last_tick = 0;
@@ -75,7 +76,7 @@ class Warehouse{
     //this._scene.add(box);
 
     this._LoadLight( {{ light }} );
-    this._LoadModel();
+    this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
     //this._LoadEntity( {{ entity }} );
     //this._DrawFigure( {{ figure }} );
@@ -92,7 +93,7 @@ class Warehouse{
             path.moveTo( value.vertices[0][0], value.vertices[0][1] )
             value.vertices.forEach((coord) => {
                 path.lineTo( coord[0], coord[1] );
-                console.log(coord[0], coord[1])
+                // console.log(coord[0], coord[1])
             })
             //path.quadraticCurveTo( 0, 1, 0.2, 1 );
             //path.lineTo( 1, 1 );
@@ -156,7 +157,7 @@ class Warehouse{
             };
             const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
             const material = new THREE[value.material_type](value.material);
-            console.log(indices)
+            // console.log(indices)
             //const material = new THREE.MeshBasicMaterial( { color: value.color, wireframe: false, transparent: true, opacity: 0.5} );
             const mesh = new THREE.Mesh( geometry, material ) ;
             mesh.rotation.set(...Object.values(value.rotation));
@@ -165,19 +166,23 @@ class Warehouse{
         }
     }
 
-  _LoadModel() {
-    const model_loader = new GLTFLoader();
-    model_loader.load(
-        '{{ url_for('static', filename='3d_models/cat/scene.gltf') }}'
-          , (gltf) => {
-      gltf.scene.traverse(c => {
-        c.castShadow = true;
+  _LoadModel(data) {
+    for (const [key, value] of Object.entries(data)) {
+      const model_loader = new GLTFLoader();
+      model_loader.load(
+          value.path
+            , (gltf) => {
+        gltf.scene.traverse(c => {
+          c.castShadow = value.castShadow;
+          c.receiveShadow = value.receiveShadow;
+          c.name = key;
+        });
+        gltf.scene.position.set(...Object.values(value.position));
+        gltf.scene.rotation.set(...Object.values(value.rotation));
+        this._scene.add(gltf.scene);
       });
-      gltf.scene.position.set(17,17,17)
-      this._scene.add(gltf.scene);
-    });
+    }
   }
-
     _DrawEdges(data) {
 
 
@@ -278,7 +283,7 @@ class Warehouse{
   }
 
   _RemoveEntitys() {
-    console.log(this._scene.children);
+    // console.log(this._scene.children);
     while(this._scene.children.length > 0){ 
       this._scene.remove(this._scene.children[0]); 
     };
@@ -309,7 +314,7 @@ class Warehouse{
 
       const cur_tick = parseInt(timer.getElapsed() / 10)
       if (cur_tick != last_tick){
-        console.log( cur_tick, last_tick )
+        // console.log( cur_tick, last_tick )
         last_tick = cur_tick;
         const entitys = await get_entities();
 
@@ -317,7 +322,7 @@ class Warehouse{
 
         this._LoadLight( {{ light }} );
         this._LoadEntity(entitys);
-        this._LoadModel();
+        this._LoadModel( {{ model }} );
         this._DrawEdges( {{ line }} );
         //this._DrawFigure( {{ figure }} );
         //this._DrawShape( {{ figure }} );
@@ -327,12 +332,55 @@ class Warehouse{
       this._threejs.render(this._scene, this._camera);
       this._RAF();
     });
-  }
-}
+  };
+};
 
+class WS{
+  constructor(WS) {
+    this._Initialize();
+  }
+  _Initialize() {
+
+          // Создаем новый экземпляр WebSocket
+      this._websocket = new WebSocket('ws://localhost:8765');
+
+      // Обработчик события открытия соединения
+      this._websocket.onopen = function(event) {
+          console.log("WebSocket соединение открыто");
+      };
+
+      // Обработчик сообщений
+      this._websocket.onmessage = function(event) {
+          console.log("Получено сообщение: " + event.data);
+      };
+
+      // Обработчик ошибок
+      this._websocket.onerror = function(event) {
+          console.log("Ошибка WebSocket: " + event.data);
+      };
+
+  }
+
+  _sendMessage(message) {
+      // Отправка сообщения на сервер
+      if (this._websocket.readyState === WebSocket.OPEN) {
+        this._websocket.send(message);
+      } else {
+          console.log("WebSocket не открыт");
+      }
+  }
+};
 
 let _APP = null;
+let _WS = null;
 
 window.addEventListener('DOMContentLoaded', () => {
   _APP = new Warehouse();
+  _WS = new WS();
+
+  // Пример отправки сообщения
+  document.getElementById('mylink').addEventListener('click', function() {
+    var message = "Привет1"
+    _WS._sendMessage(message);
+  });
 });

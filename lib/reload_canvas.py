@@ -1,5 +1,6 @@
 import threading
 from domains.entity_class import Entity
+from domains.model_class import Model
 import canvas
 from importlib import reload
 
@@ -12,6 +13,7 @@ class Worker(threading.Thread):
 
     def run_reload(self):
         Entity.manager.clear_entity_list()
+        Model.manager.clear_model_list()
         reload(canvas)
         return canvas.send_data()
 
