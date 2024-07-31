@@ -34,7 +34,6 @@ class TestingConfig(Config):
     BCRYPT_LOG_ROUNDS = 1
     WTF_CSRF_ENABLED = False
 
-
 class ProductionConfig(Config):
     DEBUG = False
     DEBUG_TB_ENABLED = False

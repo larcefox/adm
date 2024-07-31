@@ -293,7 +293,7 @@ class Warehouse{
     timer.update();
 
     async function get_entities() {
-      let url_entitys = 'http://127.0.0.1:5000/entitys'
+      let url_entitys = 'http://212.42.38.234:42000/entitys'
       let response = await fetch(url_entitys)
 
       if (response.ok) { // если HTTP-статус в диапазоне 200-299
