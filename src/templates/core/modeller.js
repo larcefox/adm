@@ -79,15 +79,15 @@ class Warehouse{
     this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
     //this._LoadEntity( {{ entity }} );
-    //this._DrawFigure( {{ figure }} );
+    this._DrawFigure( {{ figure }} );
     //this._DrawShape( {{ figure }} );
-    this._DrawTriangls( {{ figure }} );
+    //this._DrawTriangls( {{ figure }} );
     this._RAF();
   };
 
     _DrawShape(data){
         for (const [key, value] of Object.entries(data)) {
-            //console.log(value.vertices)
+            console.log(value)
             const path = new THREE.Path();
 
             path.moveTo( value.vertices[0][0], value.vertices[0][1] )
@@ -118,7 +118,7 @@ class Warehouse{
             var holes = [];
             var geometry = new THREE.BufferGeometry();
             
-            var indices = Earcut.triangulate(vertices, [], 2);
+            var indices = Earcut.triangulate(vertices, [], 3);
             
             geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 2 ) );
             geometry.setIndex(indices);
@@ -134,34 +134,39 @@ class Warehouse{
     _DrawFigure( data ) {
 
         for (const [key, value] of Object.entries(data)) {
-            const shape = new THREE.Shape();
-
-            shape.moveTo( value.vertices[0][0], value.vertices[0][1] )
-
-            value.vertices.forEach((coord) => {
-                shape.lineTo( coord[0], coord[1] );
+          var points3d = [];
+          value.vertices.forEach((raw) => {
+            raw.forEach((coord) => {
+              points3d.push(new THREE.Vector3(coord[0], coord[1], coord[2]));  
             })
-            //shape.lineTo( 0, width );
-            //shape.lineTo( length, width );
-            //shape.lineTo( length, 0 );
-            //shape.lineTo( 0, 0 );
+          })
+          
+          var geom = new THREE.BufferGeometry().setFromPoints(points3d);
+          var cloud = new THREE.Points(
+            geom,
+            new THREE.PointsMaterial({ color: 0x99ccff, size: 2 })
+          );
+          this._scene.add( cloud );
 
-            const extrudeSettings = {
-            steps: 4,
-            depth: 16,
-            bevelEnabled: true,
-            bevelThickness: 1,
-            bevelSize: 1,
-            bevelOffset: 1,
-            bevelSegments: 1
-            };
-            const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-            const material = new THREE[value.material_type](value.material);
-            // console.log(indices)
-            //const material = new THREE.MeshBasicMaterial( { color: value.color, wireframe: false, transparent: true, opacity: 0.5} );
-            const mesh = new THREE.Mesh( geometry, material ) ;
-            mesh.rotation.set(...Object.values(value.rotation));
-            this._scene.add(mesh);
+          // triangulate x, z
+          var indexDelaunay = Delaunator.from(
+            points3d.map(v => {
+              return [v.x, v.y];
+            })
+          );
+
+          var meshIndex = []; // delaunay index => three.js index
+          for (let i = 0; i < indexDelaunay.triangles.length; i++){
+            meshIndex.push(indexDelaunay.triangles[i]);
+          }
+
+          geom.setIndex(meshIndex); // add three.js index to the existing geometry
+          geom.computeVertexNormals();
+          var mesh = new THREE.Mesh(
+            geom, // re-use the existing geometry
+            new THREE.MeshLambertMaterial({ color: "purple", wireframe: true })
+          );
+          this._scene.add(mesh);
 
         }
     }
@@ -300,8 +305,6 @@ class Warehouse{
         // получаем тело ответа (см. про этот метод ниже)
         let entities = await response.json();
 
-        console.log( entities );
-        console.log( {{ entity }} );
         return entities;
 
       } else {
@@ -324,9 +327,9 @@ class Warehouse{
         this._LoadEntity(entitys);
         this._LoadModel( {{ model }} );
         this._DrawEdges( {{ line }} );
-        //this._DrawFigure( {{ figure }} );
+        this._DrawFigure( {{ figure }} );
         //this._DrawShape( {{ figure }} );
-        this._DrawTriangls( {{ figure }} );
+        //this._DrawTriangls( {{ figure }} );
       };
 
       this._threejs.render(this._scene, this._camera);
