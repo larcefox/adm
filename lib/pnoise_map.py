@@ -27,9 +27,10 @@ class MapGen:
             for y in range(self.shape[1]):
                 for z in range(self.shape[2]):
                     match z:
-                        case 0:
+                        # This place is braine fuck, I changed places in array insted chenging coords.
+                        case 2:
                             self.noise[x][y][z] = x * 100
-                        case 1:
+                        case 0:
                             self.noise[x][y][z] = y * 100
                         case _:
                             self.noise[x][y][z] = pnoise2(
