@@ -5,6 +5,8 @@ from domains.entity_class import Entity_fabric as ef
 from domains.entity_class import Entity
 from domains.model_class import ModelFabric as mf
 from domains.model_class import Model
+from domains.arch_class import ArchFabric as af
+from domains.arch_class import Arch
 from lib.pnoise_map import MapGen
 
 
@@ -30,8 +32,10 @@ def send_data():
 
     # box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
     map = ef.create('figure', vertices=terrain)
+    cube = af.create('cube', side_length=10)
+    wall = af.create('k_wall')
 
-# sphere = Entity_fabric.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
+#     sphere = ef.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
 
 #     for i in list(range(1, 2)):
 #         ef.create(
@@ -86,6 +90,10 @@ def send_data():
             model.name:
             model.return_dict() for model in Model.manager.get_model_list('model_obj')
             }
+    arch = {
+            arch.name:
+            arch.return_dict() for arch in Arch.manager.get_arch_list('arch')
+            }
 
     return {
             'camera': camera.return_dict(), 
@@ -93,5 +101,6 @@ def send_data():
             'shape': json.dumps(shapes),
             'line': json.dumps(lines),
             'figure': json.dumps(figures),
-            'model': json.dumps(models)
+            'model': json.dumps(models),
+            'arch': json.dumps(arch)
             }

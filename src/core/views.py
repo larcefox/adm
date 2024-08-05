@@ -25,7 +25,8 @@ def home():
                             entity=objects_dict['shape'],
                             line=objects_dict['line'],
                             figure=objects_dict['figure'],
-                            model=objects_dict['model']
+                            model=objects_dict['model'],
+                            arch=objects_dict['arch']
                             )
 
 @core_bp.route('/entitys', methods=['GET'])

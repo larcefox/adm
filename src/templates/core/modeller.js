@@ -80,34 +80,29 @@ class Warehouse{
     this._DrawEdges( {{ line }} );
     //this._LoadEntity( {{ entity }} );
     this._DrawFigure( {{ figure }} );
-    //this._DrawShape( {{ figure }} );
+    this._DrawArch( {{ arch }} );
     //this._DrawTriangls( {{ figure }} );
     this._RAF();
   };
 
-    _DrawShape(data){
+    _DrawArch(data){
         for (const [key, value] of Object.entries(data)) {
-            console.log(value)
-            const path = new THREE.Path();
+            
+          const vertices = new Float32Array( value.vertices );
+          
+          const indices = value.faces;
 
-            path.moveTo( value.vertices[0][0], value.vertices[0][1] )
-            value.vertices.forEach((coord) => {
-                path.lineTo( coord[0], coord[1] );
-                // console.log(coord[0], coord[1])
-            })
-            //path.quadraticCurveTo( 0, 1, 0.2, 1 );
-            //path.lineTo( 1, 1 );
-            //path.lineTo( 10, 10 );
 
-            const points = path.getPoints();
+          const material = new THREE[value.material_type](value.material);
 
-            const geometry = new THREE.BufferGeometry().setFromPoints( points );
-            const material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+          const geometry = new THREE.BufferGeometry();
+          geometry.setIndex( indices );
 
-            const line = new THREE.Line( geometry, material );
-             //add mesh rotation
-            line.rotation.set(...Object.values(value.rotation));
-            this._scene.add( line )
+          geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+
+          const mesh = new THREE.Mesh( geometry, material );
+          mesh.rotation.set(...Object.values(value.rotation));
+          this._scene.add( mesh )
         
         }
     };
@@ -151,7 +146,7 @@ class Warehouse{
           // triangulate x, z
           var indexDelaunay = Delaunator.from(
             points3d.map(v => {
-              return [v.x, v.y];
+              return [v.x, v.z];
             })
           );
 
@@ -189,8 +184,6 @@ class Warehouse{
     }
   }
     _DrawEdges(data) {
-
-
         for (const [key, value] of Object.entries(data)) {
             const points = [];
 
@@ -328,7 +321,7 @@ class Warehouse{
         this._LoadModel( {{ model }} );
         this._DrawEdges( {{ line }} );
         this._DrawFigure( {{ figure }} );
-        //this._DrawShape( {{ figure }} );
+        this._DrawArch( {{ arch }} );
         //this._DrawTriangls( {{ figure }} );
       };
 

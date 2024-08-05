@@ -86,7 +86,7 @@ class Entity(abc.ABC, Entity_manager):
 class Line(Entity):
     def __init__(
             self,
-            name: str = 'Entity',
+            name: str = 'Line',
             color:int = 0xffffff,
             position1: dict = {'x': 0, 'y': 0, 'z': 0}, 
             position2: dict = {'x': 0, 'y': 0, 'z': 0}, 
@@ -118,7 +118,7 @@ class Line(Entity):
 class Figure(Entity):
     def __init__(
             self,
-            name: str = 'Entity',
+            name: str = 'Figure',
             color:int = 0xffffff,
             texture = None,
             vertices: list = [], 
@@ -163,7 +163,7 @@ class Box(Entity):
             width: float,
             height: float,
             depth: float,
-            name: str = 'Entity',
+            name: str = 'Box',
             color:int = 0xffffff,
             texture = None,
             position: dict = {'x': 0, 'y': 0, 'z': 0}, 
@@ -206,7 +206,7 @@ class Sphere(Entity):
             radius: float,
             widthSegments: float,
             heightSegments: float,
-            name: str = 'Entity',
+            name: str = 'Sphere',
             color:int = 0xffffff,
             texture = None,
             position: dict = {'x': 0, 'y': 0, 'z': 0}, 
@@ -249,7 +249,7 @@ class Plane(Entity):
             self,
             width: float,
             height: float,
-            name: str = 'Entity',
+            name: str = 'Plane',
             color:int = 0xffffff,
             texture = None,
             position: dict = {'x': 0, 'y': 0, 'z': 0}, 
@@ -293,7 +293,7 @@ class Plane(Entity):
 class Camera(Entity):
     def __init__(
             self, 
-            name: str = 'Entity',
+            name: str = 'Camera',
             camera_type: str='PerspectiveCamera', 
             fild_of_view: int=75, 
             aspect_ratio: str='innerWidth / innerHeight',
@@ -316,7 +316,7 @@ class Camera(Entity):
 class Light(Entity):
     def __init__(
             self, 
-            name: str = 'Entity',
+            name: str = 'Light',
             light_type: str='DirectionalLight',
             color: int=0xffffff,
             intensity: float=1.0,
@@ -361,7 +361,7 @@ class Light(Entity):
 class Model(Entity):
     def __init__(
             self, 
-            name: str = 'Entity',
+            name: str = 'Model',
             light_type: str='DirectionalLight',
             color: int=0xffffff,
             intensity: float=1.0,
