@@ -3,19 +3,22 @@ import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/j
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
-import { WS } from './core/websocket.js';
+import { WS } from './static/js/websocket.js';
+
 
 
 var timer = new Timer();
+var _WS = new WS();
+
 var cur_tick;
 var last_tick = 0;
 
 class Warehouse{
   constructor(Warehouse) {
-    this._Initialize(_WS);
+    this._Initialize();
   }
 
-  _Initialize(_WS) {
+  _Initialize() {
     this._threejs = new THREE.WebGLRenderer({
       antialias: true,
     });
@@ -75,7 +78,7 @@ class Warehouse{
     //box.castShadow = true;
     //box.receiveShadow = true;
     //this._scene.add(box);
-
+    
     this._LoadLight( {{ light }} );
     this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
@@ -309,6 +312,8 @@ class Warehouse{
 
     requestAnimationFrame(async () => {
 
+      // _WS._sendMessage('get_arch');
+      _WS._sendMessage(JSON.stringify(this._camera.position));
       const cur_tick = parseInt(timer.getElapsed() / 10)
       if (cur_tick != last_tick){
         // console.log( cur_tick, last_tick )
@@ -336,8 +341,7 @@ let _APP = null;
 
 window.addEventListener('DOMContentLoaded', () => {
 
-  _WS = new WS();
-  _APP = new Warehouse(_WS);
+  _APP = new Warehouse();
 
   // Пример отправки сообщения
   document.getElementById('mylink').addEventListener('click', function() {
