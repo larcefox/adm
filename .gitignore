@@ -153,5 +153,8 @@ __pycache__
 
 # env file
 .env
+.venv/
+.logs/
 .venv
+venv
 

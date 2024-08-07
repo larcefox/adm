@@ -1,4 +1,4 @@
-#!/home/larce/projects/market/.venv/bin/python
+#!/home/larce/projects/idm/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

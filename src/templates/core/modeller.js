@@ -3,9 +3,13 @@ import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/j
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
+import { WS } from './static/js/websocket.js';
+
 
 
 var timer = new Timer();
+var _WS = new WS();
+
 var cur_tick;
 var last_tick = 0;
 
@@ -74,7 +78,7 @@ class Warehouse{
     //box.castShadow = true;
     //box.receiveShadow = true;
     //this._scene.add(box);
-
+    
     this._LoadLight( {{ light }} );
     this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
@@ -308,6 +312,8 @@ class Warehouse{
 
     requestAnimationFrame(async () => {
 
+      // _WS._sendMessage('get_arch');
+      _WS._sendMessage(JSON.stringify(this._camera.position));
       const cur_tick = parseInt(timer.getElapsed() / 10)
       if (cur_tick != last_tick){
         // console.log( cur_tick, last_tick )
@@ -331,48 +337,11 @@ class Warehouse{
   };
 };
 
-class WS{
-  constructor(WS) {
-    this._Initialize();
-  }
-  _Initialize() {
-
-          // Создаем новый экземпляр WebSocket
-      this._websocket = new WebSocket('ws://localhost:8765');
-
-      // Обработчик события открытия соединения
-      this._websocket.onopen = function(event) {
-          console.log("WebSocket соединение открыто");
-      };
-
-      // Обработчик сообщений
-      this._websocket.onmessage = function(event) {
-          console.log("Получено сообщение: " + event.data);
-      };
-
-      // Обработчик ошибок
-      this._websocket.onerror = function(event) {
-          console.log("Ошибка WebSocket: " + event.data);
-      };
-
-  }
-
-  _sendMessage(message) {
-      // Отправка сообщения на сервер
-      if (this._websocket.readyState === WebSocket.OPEN) {
-        this._websocket.send(message);
-      } else {
-          console.log("WebSocket не открыт");
-      }
-  }
-};
-
 let _APP = null;
-let _WS = null;
 
 window.addEventListener('DOMContentLoaded', () => {
+
   _APP = new Warehouse();
-  _WS = new WS();
 
   // Пример отправки сообщения
   document.getElementById('mylink').addEventListener('click', function() {
