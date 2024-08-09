@@ -18,11 +18,11 @@ def home():
     is_admin = (
         Role.query.join(User).where(User.id == current_user.get_id()).first().is_admin
     )
-    asyncio.run(websocket_client(current_user.get_id(), 'God hear!'))
+    # asyncio.run(websocket_client({"god_sign": [{current_user.get_id(), "God hear!"}]}))
     return render_template("core/index.html", 
                             user=current_user.get_id(),
                             is_admin=is_admin,
-                            title='EIM 3d prototipe',
+                            title='QurE',
                             body='body',
                             light=objects_dict['lights'], 
                             camera=objects_dict['camera'], 
