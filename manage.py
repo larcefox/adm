@@ -8,7 +8,7 @@ logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO",
 cli = FlaskGroup(app)
 
 if __name__ == "__main__":
-    command = ["/home/larce/projects/idm/.venv/bin/python", "/home/larce/projects/idm/lib/websocket.py"]
+    command = ["/home/larce/projects/idm/.venv/bin/python", "/home/larce/projects/idm/lib/websocket_server.py"]
     try:
         process = subprocess.Popen(command)
         logger.info("Websocket trying to start:", process)
