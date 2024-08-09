@@ -6,7 +6,7 @@ import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/m
 import { WS } from './static/js/websocket.js';
 
 
-
+var camera_position
 var timer = new Timer();
 var _WS = new WS();
 
@@ -49,7 +49,6 @@ class Warehouse{
         {{ camera.position['y'] }},
         {{ camera.position['z'] }}
       );
-
 
 
     const controls = new OrbitControls(
@@ -187,6 +186,23 @@ class Warehouse{
       });
     }
   }
+
+  _LoadModel_v2(coordinates) {
+    const model_loader = new GLTFLoader();
+    model_loader.load(
+        './static/3d_models/cat/scene.gltf'
+          , (gltf) => {
+      gltf.scene.traverse(c => {
+        // c.castShadow = value.castShadow;
+        // c.receiveShadow = value.receiveShadow;
+        c.name = "model";
+      });
+      gltf.scene.position.set(...Object.values(coordinates));
+      // gltf.scene.rotation.set(...Object.values(value.rotation));
+      this._scene.add(gltf.scene);
+    });
+  }
+
     _DrawEdges(data) {
         for (const [key, value] of Object.entries(data)) {
             const points = [];
@@ -295,7 +311,7 @@ class Warehouse{
     timer.update();
 
     async function get_entities() {
-      let url_entitys = 'http://212.42.38.234:42000/entitys'
+      let url_entitys = 'http://127.0.0.1:8200/entitys'
       let response = await fetch(url_entitys)
 
       if (response.ok) { // если HTTP-статус в диапазоне 200-299
@@ -311,9 +327,20 @@ class Warehouse{
     };
 
     requestAnimationFrame(async () => {
+      
+      if (camera_position != JSON.stringify(this._camera.position)){
+        _WS._sendMessage(JSON.stringify({'user_position': [{'{{ user }}': this._camera.position}]}));
+        camera_position = JSON.stringify(this._camera.position)
+        
+        _WS._websocket.onmessage = function(event) {
+          // this._LoadModel( {{ model }} );
+          // this._LoadModel( JSON.parse(event.data) );
+          console.log( ...Object.values(JSON.parse(event.data)) );
+        };
+
+      };
 
       // _WS._sendMessage('get_arch');
-      _WS._sendMessage(JSON.stringify(this._camera.position));
       const cur_tick = parseInt(timer.getElapsed() / 10)
       if (cur_tick != last_tick){
         // console.log( cur_tick, last_tick )

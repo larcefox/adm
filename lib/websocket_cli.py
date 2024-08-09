@@ -1,22 +1,23 @@
 import asyncio
 import websockets
+import json
 
 
-async def send_data(websocket, user, data):
+async def send_data(websocket, data):
     """Send data to the WebSocket server."""
-    await websocket.send(str({user: data}))
-    print('Send:', str({user: data}))
+    await websocket.send(json.dumps(data))
+    print('Send:', data)
 
     # Optionally, wait for and print a response from the server
     response = await websocket.recv()
     print(f"Received: {response}")
 
-async def websocket_client(user, data):
+async def websocket_client(data):
     uri = "ws://localhost:8765"  # Replace with your WebSocket server URI
     async with websockets.connect(uri) as websocket:
 
         # Use the send_data function to send the message
-        await send_data(websocket, user, data)
+        await send_data(websocket, data)
         
 
 # Run the WebSocket client

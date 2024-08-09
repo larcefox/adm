@@ -20,20 +20,22 @@ def send_data():
 
     # example entity
 
-#     plane = ef.create(
-#             'plane',
-#             630, 
-#             630,
-#             texture='textures/map.svg',
-#             color=0xffffff,
-#             position={'x':0, 'y': 0, 'z': 0},
-#             rotation={'x': -(math.pi/2),'y': 0, 'z': -(math.pi/2)}
-#             )
-
+    plane = ef.create(
+            'plane',
+            630, 
+            630,
+            texture='textures/map.svg',
+            color=0xffffff,
+            position={'x':0, 'y': 0, 'z': 0},
+            rotation={'x': -(math.pi/2),'y': 0, 'z': -(math.pi/2)}
+            )
+    
+    model = mf.create('model_obj', path='cat//scene.gltf')
+    
     # box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
-    map = ef.create('figure', vertices=terrain)
-    cube = af.create('cube', side_length=10)
-    wall = af.create('k_wall')
+    # map = ef.create('figure', vertices=terrain)
+    # cube = af.create('cube', side_length=10)
+    # wall = af.create('k_wall')
 
 #     sphere = ef.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
 

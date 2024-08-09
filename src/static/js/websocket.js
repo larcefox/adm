@@ -3,7 +3,7 @@ class WS{
       this._Initialize();
     }
     _Initialize() {
-  
+
             // Создаем новый экземпляр WebSocket
         this._websocket = new WebSocket('ws://localhost:8765');
   
@@ -14,7 +14,8 @@ class WS{
   
         // Обработчик сообщений
         this._websocket.onmessage = function(event) {
-            console.log("Получено сообщение: " + event.data);
+            // console.log("Получено сообщение: " + event.data);
+            
         };
   
         // Обработчик ошибок

@@ -47,7 +47,7 @@ class ModelOBJ(Model):
             name: str = 'Model',
             static_path: str = './static/3d_models/',
             path: str = None,
-            position: dict = {'x': 0, 'y': 0, 'z': 0},
+            position: dict = {'x': 10, 'y': 10, 'z': 10},
             rotation: dict = {'x': 0, 'y': 0, 'z': 0},
             cast_shadow = True,
             receive_shadow = True
