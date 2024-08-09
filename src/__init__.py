@@ -61,7 +61,6 @@ from src.dinamo import base_model
 from src.dinamo.models import module_factory
 
 
-
 class_names = module_factory()
 class MyAdminIndexView(AdminIndexView):
     @expose('/')

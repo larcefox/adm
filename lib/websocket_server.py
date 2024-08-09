@@ -7,13 +7,12 @@ logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO",
 
 async def echo_messages(websocket, path):
     while True:
-        
         data = await websocket.recv()
         match data:
             case 'get_arch':
                 await websocket.send('send_arch')
             case _:
-                await websocket.send(data + "1тевирП ")
+                await websocket.send(data)
 
 async def main():
     try:

@@ -3,6 +3,8 @@ from flask_login import login_required
 from src.accounts.models import User, Role
 from flask_login import current_user
 from lib.reload_canvas import Worker
+import asyncio
+from lib.websocket_cli import websocket_client
 
 
 core_bp = Blueprint("core", __name__)
@@ -16,7 +18,9 @@ def home():
     is_admin = (
         Role.query.join(User).where(User.id == current_user.get_id()).first().is_admin
     )
+    asyncio.run(websocket_client(current_user.get_id(), 'God hear!'))
     return render_template("core/index.html", 
+                            user=current_user.get_id(),
                             is_admin=is_admin,
                             title='EIM 3d prototipe',
                             body='body',
