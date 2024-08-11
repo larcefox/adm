@@ -8,7 +8,7 @@ import { WS } from './static/js/websocket.js';
 
 var camera_position
 var timer = new Timer();
-var _WS = new WS();
+const _WS = new WS();
 
 var cur_tick;
 var last_tick = 0;
@@ -58,12 +58,12 @@ class Warehouse{
 
     const loader = new THREE.CubeTextureLoader();
     const textur = loader.load([
-        '{{ url_for('static', filename='textures/skybox/posx.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negx.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/posy.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negy.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/posz.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negz.jpg') }}'
+        '{{ url_for('static', filename='textures/skybox/posx.png') }}',
+        '{{ url_for('static', filename='textures/skybox/negx.png') }}',
+        '{{ url_for('static', filename='textures/skybox/posy.png') }}',
+        '{{ url_for('static', filename='textures/skybox/negy.png') }}',
+        '{{ url_for('static', filename='textures/skybox/posz.png') }}',
+        '{{ url_for('static', filename='textures/skybox/negz.png') }}'
     ]);
 
     this._scene.background = textur;
@@ -79,7 +79,7 @@ class Warehouse{
     //this._scene.add(box);
     
     this._LoadLight( {{ light }} );
-    this._LoadModel( {{ model }} );
+    // this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
     //this._LoadEntity( {{ entity }} );
     this._DrawFigure( {{ figure }} );
@@ -169,7 +169,7 @@ class Warehouse{
         }
     }
 
-  _LoadModel(data) {
+  _LoadModel_v1(data) {
     for (const [key, value] of Object.entries(data)) {
       const model_loader = new GLTFLoader();
       model_loader.load(
@@ -187,14 +187,46 @@ class Warehouse{
     }
   }
 
-  _LoadModel_v2(coordinates) {
+  _LoadModel(data) {
+    for (const [name, coordinates] of Object.entries(data)) {
+
+      
+      const model = this._scene.getObjectByName(name)
+      console.log(this._scene.getObjectByName(name))
+
+      if (model){
+        console.log('update')
+        model.position.set(...Object.values(coordinates.position));
+        model.rotation.set(...Object.values(coordinates.rotation));
+
+      }else{
+
+        console.log('create')
+        const model_loader = new GLTFLoader();
+        model_loader.load(
+          './static/3d_models/cat/scene.gltf'
+            , (gltf) => {
+        gltf.scene.traverse(c => {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          c.name = name;
+        });
+        gltf.scene.position.set(...Object.values(coordinates.position));
+        gltf.scene.rotation.set(...Object.values(coordinates.rotation));
+        this._scene.add(gltf.scene);
+        });
+      };
+    };
+  };
+
+  _LoadModel_v3(coordinates) {
     const model_loader = new GLTFLoader();
     model_loader.load(
         './static/3d_models/cat/scene.gltf'
           , (gltf) => {
       gltf.scene.traverse(c => {
-        // c.castShadow = value.castShadow;
-        // c.receiveShadow = value.receiveShadow;
+        // c.castShadow = true;
+        // c.receiveShadow = true;
         c.name = "model";
       });
       gltf.scene.position.set(...Object.values(coordinates));
@@ -327,21 +359,24 @@ class Warehouse{
     };
 
     requestAnimationFrame(async () => {
-      
-      if (camera_position != JSON.stringify(this._camera.position)){
-        _WS._sendMessage(JSON.stringify({'user_position': [{'{{ user }}': this._camera.position}]}));
-        camera_position = JSON.stringify(this._camera.position)
-        
-        _WS._websocket.onmessage = function(event) {
-          // this._LoadModel( {{ model }} );
-          // this._LoadModel( JSON.parse(event.data) );
-          console.log( ...Object.values(JSON.parse(event.data)) );
-        };
 
+      // Send camera position for draw enother plaers avatars
+      if (camera_position != JSON.stringify(this._camera.position)){
+        _WS._sendMessage(JSON.stringify({'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}));
+        camera_position = JSON.stringify(this._camera.position)
       };
+
+      const receivedData = _WS.getReceivedData();
+      if (receivedData && receivedData != "{}"){
+        // console.log("Accessed received data:", receivedData);
+        var coords = JSON.parse(receivedData)
+        this._LoadModel( coords );
+      }
+      
 
       // _WS._sendMessage('get_arch');
       const cur_tick = parseInt(timer.getElapsed() / 10)
+
       if (cur_tick != last_tick){
         // console.log( cur_tick, last_tick )
         last_tick = cur_tick;
@@ -351,11 +386,11 @@ class Warehouse{
 
         this._LoadLight( {{ light }} );
         this._LoadEntity(entitys);
-        this._LoadModel( {{ model }} );
+        // this._LoadModel_v1( {{ model }} );
         this._DrawEdges( {{ line }} );
         this._DrawFigure( {{ figure }} );
         this._DrawArch( {{ arch }} );
-        //this._DrawTriangls( {{ figure }} );
+        // this._DrawTriangls( {{ figure }} );
       };
 
       this._threejs.render(this._scene, this._camera);
