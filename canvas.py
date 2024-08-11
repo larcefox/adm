@@ -33,9 +33,9 @@ def send_data():
     model = mf.create('model_obj', path='cat//scene.gltf')
     
     # box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
-    # map = ef.create('figure', vertices=terrain)
+    map = ef.create('figure', vertices=terrain)
     # cube = af.create('cube', side_length=10)
-    # wall = af.create('k_wall')
+    wall = af.create('k_wall')
 
 #     sphere = ef.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
 

@@ -12,19 +12,23 @@ async def echo_messages(websocket, path):
     while True:
         data = await websocket.recv()
         data = json.loads(data)
-        data_key = list(data.keys())[0]
-        match data_key:
-            case 'get_arch':
-                await websocket.send('send_arch')
-            case 'user_position':
-                cur_coordinates = data['user_position'][0]
-                user = list(cur_coordinates.keys())[0]
-                old_coordinates = users_position.pop(user, None)
-                await websocket.send(json.dumps(users_position))
-                users_position.update(cur_coordinates)
-            case _:
-                # await websocket.send(json.dumps(data))
-                await websocket.send('last')
+        
+        for data_key in data:
+
+            match data_key:
+                case 'user_position':
+                    for user in data[data_key]:
+                            # {'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}
+                            position = data[data_key][user]['position']
+                            rotation = data[data_key][user]['rotation']
+                            
+                            # delete current user old coords
+                            old_coordinates = users_position.pop(user, None)
+                            
+                            await websocket.send(json.dumps(users_position))
+                            users_position.update(data[data_key])
+                case _:
+                    await websocket.send('Data not recognized: ', json.dumps(data))
 
 async def main():
     try:
