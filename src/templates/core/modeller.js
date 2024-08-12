@@ -10,9 +10,6 @@ var camera_position
 var timer = new Timer();
 const _WS = new WS();
 
-var cur_tick;
-var last_tick = 0;
-
 class Warehouse{
   constructor(Warehouse) {
     this._Initialize();
@@ -26,15 +23,12 @@ class Warehouse{
     this._threejs.shadowMap.type = THREE.PCFSoftShadowMap;
     this._threejs.setPixelRatio(window.devicePixelRatio);
 
-    // document.getElementById('control').width = 38
-    // this._threejs.setSize(innerWidth, innerHeight - document.getElementById('control').width);
-    this._threejs.setSize( window.innerWidth / 1.3, window.innerHeight / 1.3 ); 
-
+    this._threejs.setSize( window.innerWidth, window.innerHeight); 
     document.getElementById("app").appendChild(this._threejs.domElement);
 
     window.addEventListener('resize', () => {
       this._OnWindowResize();
-      this._threejs.setSize( window.innerWidth / 1.3, window.innerHeight / 1.3 ); 
+      this._threejs.setSize( window.innerWidth, window.innerHeight ); 
     }, false);
 
     this._scene = new THREE.Scene();
@@ -81,7 +75,7 @@ class Warehouse{
     this._LoadLight( {{ light }} );
     // this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
-    //this._LoadEntity( {{ entity }} );
+    this._LoadEntity( {{ entity }} );
     this._DrawFigure( {{ figure }} );
     this._DrawArch( {{ arch }} );
     //this._DrawTriangls( {{ figure }} );
@@ -372,26 +366,6 @@ class Warehouse{
         var coords = JSON.parse(receivedData)
         this._LoadModel( coords );
       }
-      
-
-      // _WS._sendMessage('get_arch');
-      const cur_tick = parseInt(timer.getElapsed() / 10)
-
-      if (cur_tick != last_tick){
-        // console.log( cur_tick, last_tick )
-        last_tick = cur_tick;
-        const entitys = await get_entities();
-
-        this._RemoveEntitys();
-
-        this._LoadLight( {{ light }} );
-        this._LoadEntity(entitys);
-        // this._LoadModel_v1( {{ model }} );
-        this._DrawEdges( {{ line }} );
-        this._DrawFigure( {{ figure }} );
-        this._DrawArch( {{ arch }} );
-        // this._DrawTriangls( {{ figure }} );
-      };
 
       this._threejs.render(this._scene, this._camera);
       this._RAF();

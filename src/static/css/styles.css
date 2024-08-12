@@ -12,3 +12,6 @@
     display: block;
     margin-top: 0; /* remove the gap so it doesn't close */
 }
+canvas {
+  display: block; /* fix necessary to remove space at bottom of canvas */
+}
