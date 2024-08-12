@@ -6,12 +6,9 @@ import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/m
 import { WS } from './static/js/websocket.js';
 
 
-
+var camera_position
 var timer = new Timer();
-var _WS = new WS();
-
-var cur_tick;
-var last_tick = 0;
+const _WS = new WS();
 
 class Warehouse{
   constructor(Warehouse) {
@@ -26,15 +23,12 @@ class Warehouse{
     this._threejs.shadowMap.type = THREE.PCFSoftShadowMap;
     this._threejs.setPixelRatio(window.devicePixelRatio);
 
-    // document.getElementById('control').width = 38
-    // this._threejs.setSize(innerWidth, innerHeight - document.getElementById('control').width);
-    this._threejs.setSize( window.innerWidth / 1.3, window.innerHeight / 1.3 ); 
-
+    this._threejs.setSize( window.innerWidth, window.innerHeight); 
     document.getElementById("app").appendChild(this._threejs.domElement);
 
     window.addEventListener('resize', () => {
       this._OnWindowResize();
-      this._threejs.setSize( window.innerWidth / 1.3, window.innerHeight / 1.3 ); 
+      this._threejs.setSize( window.innerWidth, window.innerHeight ); 
     }, false);
 
     this._scene = new THREE.Scene();
@@ -51,7 +45,6 @@ class Warehouse{
       );
 
 
-
     const controls = new OrbitControls(
       this._camera, this._threejs.domElement);
     controls.target.set(0, 20, 0);
@@ -59,12 +52,12 @@ class Warehouse{
 
     const loader = new THREE.CubeTextureLoader();
     const textur = loader.load([
-        '{{ url_for('static', filename='textures/skybox/posx.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negx.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/posy.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negy.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/posz.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negz.jpg') }}'
+        '{{ url_for('static', filename='textures/skybox/posx.png') }}',
+        '{{ url_for('static', filename='textures/skybox/negx.png') }}',
+        '{{ url_for('static', filename='textures/skybox/posy.png') }}',
+        '{{ url_for('static', filename='textures/skybox/negy.png') }}',
+        '{{ url_for('static', filename='textures/skybox/posz.png') }}',
+        '{{ url_for('static', filename='textures/skybox/negz.png') }}'
     ]);
 
     this._scene.background = textur;
@@ -80,9 +73,9 @@ class Warehouse{
     //this._scene.add(box);
     
     this._LoadLight( {{ light }} );
-    this._LoadModel( {{ model }} );
+    // this._LoadModel( {{ model }} );
     this._DrawEdges( {{ line }} );
-    //this._LoadEntity( {{ entity }} );
+    this._LoadEntity( {{ entity }} );
     this._DrawFigure( {{ figure }} );
     this._DrawArch( {{ arch }} );
     //this._DrawTriangls( {{ figure }} );
@@ -170,7 +163,7 @@ class Warehouse{
         }
     }
 
-  _LoadModel(data) {
+  _LoadModel_v1(data) {
     for (const [key, value] of Object.entries(data)) {
       const model_loader = new GLTFLoader();
       model_loader.load(
@@ -187,6 +180,55 @@ class Warehouse{
       });
     }
   }
+
+  _LoadModel(data) {
+    for (const [name, coordinates] of Object.entries(data)) {
+
+      
+      const model = this._scene.getObjectByName(name)
+      console.log(this._scene.getObjectByName(name))
+
+      if (model){
+        console.log('update')
+        model.position.set(...Object.values(coordinates.position));
+        model.rotation.set(...Object.values(coordinates.rotation));
+
+      }else{
+
+        console.log('create')
+        const model_loader = new GLTFLoader();
+        model_loader.load(
+          './static/3d_models/cat/scene.gltf'
+            , (gltf) => {
+        gltf.scene.traverse(c => {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          c.name = name;
+        });
+        gltf.scene.position.set(...Object.values(coordinates.position));
+        gltf.scene.rotation.set(...Object.values(coordinates.rotation));
+        this._scene.add(gltf.scene);
+        });
+      };
+    };
+  };
+
+  _LoadModel_v3(coordinates) {
+    const model_loader = new GLTFLoader();
+    model_loader.load(
+        './static/3d_models/cat/scene.gltf'
+          , (gltf) => {
+      gltf.scene.traverse(c => {
+        // c.castShadow = true;
+        // c.receiveShadow = true;
+        c.name = "model";
+      });
+      gltf.scene.position.set(...Object.values(coordinates));
+      // gltf.scene.rotation.set(...Object.values(value.rotation));
+      this._scene.add(gltf.scene);
+    });
+  }
+
     _DrawEdges(data) {
         for (const [key, value] of Object.entries(data)) {
             const points = [];
@@ -295,7 +337,7 @@ class Warehouse{
     timer.update();
 
     async function get_entities() {
-      let url_entitys = 'http://212.42.38.234:42000/entitys'
+      let url_entitys = 'http://127.0.0.1:8200/entitys'
       let response = await fetch(url_entitys)
 
       if (response.ok) { // если HTTP-статус в диапазоне 200-299
@@ -312,24 +354,18 @@ class Warehouse{
 
     requestAnimationFrame(async () => {
 
-      // _WS._sendMessage('get_arch');
-      _WS._sendMessage(JSON.stringify(this._camera.position));
-      const cur_tick = parseInt(timer.getElapsed() / 10)
-      if (cur_tick != last_tick){
-        // console.log( cur_tick, last_tick )
-        last_tick = cur_tick;
-        const entitys = await get_entities();
-
-        this._RemoveEntitys();
-
-        this._LoadLight( {{ light }} );
-        this._LoadEntity(entitys);
-        this._LoadModel( {{ model }} );
-        this._DrawEdges( {{ line }} );
-        this._DrawFigure( {{ figure }} );
-        this._DrawArch( {{ arch }} );
-        //this._DrawTriangls( {{ figure }} );
+      // Send camera position for draw enother plaers avatars
+      if (camera_position != JSON.stringify(this._camera.position)){
+        _WS._sendMessage(JSON.stringify({'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}));
+        camera_position = JSON.stringify(this._camera.position)
       };
+
+      const receivedData = _WS.getReceivedData();
+      if (receivedData && receivedData != "{}"){
+        // console.log("Accessed received data:", receivedData);
+        var coords = JSON.parse(receivedData)
+        this._LoadModel( coords );
+      }
 
       this._threejs.render(this._scene, this._camera);
       this._RAF();

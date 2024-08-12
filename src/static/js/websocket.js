@@ -1,37 +1,50 @@
-class WS{
-    constructor(WS) {
-      this._Initialize();
+class WS {
+    constructor() {
+        this._Initialize();
+        this.receivedData = null;  // Property to store received data
     }
+
     _Initialize() {
-  
-            // Создаем новый экземпляр WebSocket
+        // Create a new WebSocket instance
         this._websocket = new WebSocket('ws://localhost:8765');
-  
-        // Обработчик события открытия соединения
-        this._websocket.onopen = function(event) {
-            console.log("WebSocket соединение открыто");
+
+        // Connection opened
+        this._websocket.onopen = (event) => {
+            console.log("WebSocket connection opened");
         };
-  
-        // Обработчик сообщений
-        this._websocket.onmessage = function(event) {
-            console.log("Получено сообщение: " + event.data);
+
+        // Message received
+        this._websocket.onmessage = (event) => {
+            // console.log("Received message from server: " + event.data);
+            this.receivedData = event.data;  // Store the received data
+            this._processData(event.data);   // Call another method with the data
         };
-  
-        // Обработчик ошибок
-        this._websocket.onerror = function(event) {
-            console.log("Ошибка WebSocket: " + event.data);
+
+        // Connection error
+        this._websocket.onerror = (event) => {
+            console.log("WebSocket error: " + event.data);
         };
-  
     }
-  
+
     _sendMessage(message) {
-        // Отправка сообщения на сервер
+        // Send a message to the server
         if (this._websocket.readyState === WebSocket.OPEN) {
-          this._websocket.send(message);
+            this._websocket.send(message);
         } else {
-            console.log("WebSocket не открыт");
+            console.log("WebSocket is not open");
         }
     }
-  };
 
-  export { WS };
+    // Method to process the received data
+    _processData(data) {
+        // console.log("Processing received data:", data);
+        // You can add your logic here to handle the data
+    }
+
+    // Method to access the received data
+    getReceivedData() {
+        return this.receivedData;
+    }
+}
+
+export { WS };

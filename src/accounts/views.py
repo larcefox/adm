@@ -9,7 +9,6 @@ from .forms import LoginForm
 
 accounts_bp = Blueprint("accounts", __name__, template_folder="templates")
 
-
 @accounts_bp.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
@@ -43,8 +42,6 @@ def logout():
 
 @accounts_bp.route("/login", methods=["GET", "POST"])
 def login():
-    print(User.query.all())
-    print(Role.query.all())
     if current_user.is_authenticated:
         flash("You are already logged in.", "info")
         return redirect(url_for("core.home"))
