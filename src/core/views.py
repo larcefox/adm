@@ -32,10 +32,10 @@ def home():
                             model=objects_dict['model'],
                             arch=objects_dict['arch']
                             )
-
-@core_bp.route('/entitys', methods=['GET'])
-def get_entitys():
-    return objects_dict['shape']
+# depricated after websocket apire
+# @core_bp.route('/entitys', methods=['GET'])
+# def get_entitys():
+#     return objects_dict['shape']
 
 core_bp.route("/ws")
 @login_required

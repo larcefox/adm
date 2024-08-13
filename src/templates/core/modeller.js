@@ -2,13 +2,14 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.mod
 import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
-import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
+// import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
 
 
 var camera_position
-var timer = new Timer();
 const _WS = new WS();
+
+var users_pos = null
 
 class Warehouse{
   constructor(Warehouse) {
@@ -23,12 +24,13 @@ class Warehouse{
     this._threejs.shadowMap.type = THREE.PCFSoftShadowMap;
     this._threejs.setPixelRatio(window.devicePixelRatio);
 
-    this._threejs.setSize( window.innerWidth, window.innerHeight); 
+    this._threejs.setSize( window.innerWidth  - 15 , window.innerHeight - 20); 
     document.getElementById("app").appendChild(this._threejs.domElement);
 
+    // Not working!!!
     window.addEventListener('resize', () => {
       this._OnWindowResize();
-      this._threejs.setSize( window.innerWidth, window.innerHeight ); 
+      this._threejs.setSize( window.innerWidth  - 15 , window.innerHeight - 20);
     }, false);
 
     this._scene = new THREE.Scene();
@@ -61,16 +63,6 @@ class Warehouse{
     ]);
 
     this._scene.background = textur;
-
-    //const box = new THREE.Mesh(
-      //new THREE.BoxGeometry(5, 5, 5),
-      //new THREE.MeshStandardMaterial({
-          //color: 0xFFFFFF,
-      //}));
-    //box.position.set(54.43783, 10, 85.1159569);
-    //box.castShadow = true;
-    //box.receiveShadow = true;
-    //this._scene.add(box);
     
     this._LoadLight( {{ light }} );
     // this._LoadModel( {{ model }} );
@@ -163,25 +155,7 @@ class Warehouse{
         }
     }
 
-  _LoadModel_v1(data) {
-    for (const [key, value] of Object.entries(data)) {
-      const model_loader = new GLTFLoader();
-      model_loader.load(
-          value.path
-            , (gltf) => {
-        gltf.scene.traverse(c => {
-          c.castShadow = value.castShadow;
-          c.receiveShadow = value.receiveShadow;
-          c.name = key;
-        });
-        gltf.scene.position.set(...Object.values(value.position));
-        gltf.scene.rotation.set(...Object.values(value.rotation));
-        this._scene.add(gltf.scene);
-      });
-    }
-  }
-
-  _LoadModel(data) {
+  _LoadUserModel(data) {
     for (const [name, coordinates] of Object.entries(data)) {
 
       
@@ -213,7 +187,7 @@ class Warehouse{
     };
   };
 
-  _LoadModel_v3(coordinates) {
+  _LoadModel(coordinates) {
     const model_loader = new GLTFLoader();
     model_loader.load(
         './static/3d_models/cat/scene.gltf'
@@ -334,37 +308,26 @@ class Warehouse{
   };
 
   _RAF() {
-    timer.update();
-
-    async function get_entities() {
-      let url_entitys = 'http://127.0.0.1:8200/entitys'
-      let response = await fetch(url_entitys)
-
-      if (response.ok) { // если HTTP-статус в диапазоне 200-299
-        // получаем тело ответа (см. про этот метод ниже)
-        let entities = await response.json();
-
-        return entities;
-
-      } else {
-        console.log('Error!')
-        alert("Ошибка HTTP: " + response.status);
-      }
-    };
-
     requestAnimationFrame(async () => {
 
-      // Send camera position for draw enother plaers avatars
+      // Send camera (user) position
       if (camera_position != JSON.stringify(this._camera.position)){
         _WS._sendMessage(JSON.stringify({'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}));
         camera_position = JSON.stringify(this._camera.position)
       };
 
+      // Send user users_pos
+      _WS._sendMessage(JSON.stringify({'users_pos': {'{{ user }}': users_pos}}));
+
       const receivedData = _WS.getReceivedData();
-      if (receivedData && receivedData != "{}"){
-        // console.log("Accessed received data:", receivedData);
-        var coords = JSON.parse(receivedData)
-        this._LoadModel( coords );
+      if (receivedData){
+        var recivedDataJson = JSON.parse(receivedData)
+        console.log("recivedDataJson:", recivedDataJson["users_pos"]);
+        if (recivedDataJson["users_pos"]){
+          console.log("User position data:", recivedDataJson);
+          this._LoadUserModel(recivedDataJson["users_pos"])
+          users_pos = recivedDataJson["users_pos"]
+        }
       }
 
       this._threejs.render(this._scene, this._camera);

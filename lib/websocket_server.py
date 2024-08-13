@@ -1,7 +1,9 @@
+from typing import Dict, Any
 import asyncio
 import websockets
 from loguru import logger
 import json
+import hashlib
 
 
 logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO", retention="10 days")
@@ -14,19 +16,26 @@ async def echo_messages(websocket, path):
         data = json.loads(data)
         
         for data_key in data:
-
+            print(data)
             match data_key:
+                
                 case 'user_position':
+                    print('User position recived')
+                    users_position.update(data[data_key])
+                
+                case 'users_pos':
+                    print('users_pos cached')
                     for user in data[data_key]:
-                            # {'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}
-                            position = data[data_key][user]['position']
-                            rotation = data[data_key][user]['rotation']
-                            
-                            # delete current user old coords
-                            old_coordinates = users_position.pop(user, None)
-                            
-                            await websocket.send(json.dumps(users_position))
-                            users_position.update(data[data_key])
+                        other_users = {i:users_position[i] for i in users_position if i!=user}
+                        current_hash = dict_hash(other_users)
+                        user_hash = dict_hash(data[data_key][user])
+                        print(current_hash, users_position)
+                        print(user_hash, data[data_key][user])
+                        if current_hash == user_hash:
+                            print('it is the same')
+                        else:
+                            print('it is the different')
+                            await websocket.send(json.dumps({'users_pos': other_users}))
                 case _:
                     await websocket.send('Data not recognized: ', json.dumps(data))
 
@@ -36,6 +45,15 @@ async def main():
             await asyncio.Future()
     except OSError as e:
         logger.info("Websocket already started")
+
+def dict_hash(dictionary: Dict[str, Any]) -> str:
+    """MD5 hash of a dictionary."""
+    dhash = hashlib.md5()
+    # We need to sort arguments so {'a': 1, 'b': 2} is
+    # the same as {'b': 2, 'a': 1}
+    encoded = json.dumps(dictionary, sort_keys=True).encode()
+    dhash.update(encoded)
+    return dhash.hexdigest()
 
 if __name__ == "__main__":
     asyncio.run(main())
