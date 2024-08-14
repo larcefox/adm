@@ -14,6 +14,6 @@ if __name__ == "__main__":
         logger.info("Websocket trying to start:", process)
         
     except OSError as e:
-        logger.info("Websocket already started", process)
+        logger.info("Websocket already started")
     
     cli()
