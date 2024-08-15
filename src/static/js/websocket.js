@@ -18,6 +18,7 @@ class WS {
             // console.log("Received message from server: " + event.data);
             this.receivedData = event.data;  // Store the received data
             this._processData(event.data);   // Call another method with the data
+            // this.receivedData = null;
         };
 
         // Connection error

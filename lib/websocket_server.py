@@ -16,25 +16,19 @@ async def echo_messages(websocket, path):
         data = json.loads(data)
         
         for data_key in data:
-            print(data)
             match data_key:
                 
                 case 'user_position':
-                    print('User position recived')
                     users_position.update(data[data_key])
                 
                 case 'users_pos':
-                    print('users_pos cached')
                     for user in data[data_key]:
                         other_users = {i:users_position[i] for i in users_position if i!=user}
                         current_hash = dict_hash(other_users)
                         user_hash = dict_hash(data[data_key][user])
-                        print(current_hash, users_position)
-                        print(user_hash, data[data_key][user])
                         if current_hash == user_hash:
-                            print('it is the same')
+                            pass
                         else:
-                            print('it is the different')
                             await websocket.send(json.dumps({'users_pos': other_users}))
                 case _:
                     await websocket.send('Data not recognized: ', json.dumps(data))
