@@ -4,6 +4,7 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
+import dat from "https://cdn.skypack.dev/dat.gui";
 
 
 var camera_position
@@ -106,10 +107,8 @@ class Warehouse{
             
             geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 2 ) );
             geometry.setIndex(indices);
-            //console.log('indices', indices)
             const material = new THREE[value.material_type](value.material);
             const mesh = new THREE.Mesh( geometry, material );
-            //console.log(geometry)
             this._scene.add( mesh )
 
                 
@@ -160,7 +159,6 @@ class Warehouse{
 
       
       const model = this._scene.getObjectByName(name)
-      console.log(this._scene.getObjectByName(name))
 
       if (model){
         console.log('update')
@@ -301,7 +299,6 @@ class Warehouse{
   }
 
   _RemoveEntitys() {
-    // console.log(this._scene.children);
     while(this._scene.children.length > 0){ 
       this._scene.remove(this._scene.children[0]); 
     };
@@ -321,14 +318,14 @@ class Warehouse{
 
       const receivedData = _WS.getReceivedData();
       if (receivedData){
+        console.log(receivedData)
         var recivedDataJson = JSON.parse(receivedData)
-        console.log("recivedDataJson:", recivedDataJson["users_pos"]);
         if (recivedDataJson["users_pos"]){
-          console.log("User position data:", recivedDataJson);
           this._LoadUserModel(recivedDataJson["users_pos"])
           users_pos = recivedDataJson["users_pos"]
-        }
-      }
+        };
+        _WS.receivedData = null;
+      };
 
       this._threejs.render(this._scene, this._camera);
       this._RAF();
