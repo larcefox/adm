@@ -10,6 +10,25 @@ import dat from "https://cdn.skypack.dev/dat.gui";
 var camera_position
 const _WS = new WS();
 
+const gui = new dat.GUI();
+const folder = gui.addFolder('Links');
+const linkHolder = document.createElement('div');
+linkHolder.innerHTML = '<a class="dat-link" href="{{ url_for('accounts.logout') }}">Выйти</a>';
+
+function button_func() {
+  window.location.href = '/logout';
+};
+
+folder.add({Logout: button_func}, 'Logout');
+
+const settings = {
+  volume: 50  // Slider will control this property
+};
+
+// Add a slider to the folder
+folder.add(settings, 'volume', 0, 100).name('Volume');
+folder.open();
+
 var users_pos = null
 
 class Warehouse{
