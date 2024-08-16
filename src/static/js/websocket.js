@@ -6,7 +6,7 @@ class WS {
 
     _Initialize() {
         // Create a new WebSocket instance
-        this._websocket = new WebSocket('ws://localhost:8765');
+        this._websocket = new WebSocket('ws://qure.space:8765');
 
         // Connection opened
         this._websocket.onopen = (event) => {
@@ -18,6 +18,7 @@ class WS {
             // console.log("Received message from server: " + event.data);
             this.receivedData = event.data;  // Store the received data
             this._processData(event.data);   // Call another method with the data
+            // this.receivedData = null;
         };
 
         // Connection error
