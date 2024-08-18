@@ -49,5 +49,8 @@ def dict_hash(dictionary: Dict[str, Any]) -> str:
     dhash.update(encoded)
     return dhash.hexdigest()
 
-if __name__ == "__main__":
+def run_websocket():
     asyncio.run(main())
+
+if __name__ == "__main__":
+    run_websocket()
