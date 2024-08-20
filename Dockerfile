@@ -18,7 +18,7 @@ ENV APP_SETTINGS=config.DevelopmentConfig
 ENV DATABASE_URL=postgresql+psycopg2://postgres:rtlnd33g7a@212.42.38.234:32769/3db
 ENV FLASK_APP=src
 ENV FLASK_DEBUG=1
-ENV APP_NAME='Market'
+ENV APP_NAME='qure'
 ENV DB_SCHEMA='auth'
 
 COPY . .

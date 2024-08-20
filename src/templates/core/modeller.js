@@ -7,13 +7,14 @@ import { WS } from './static/js/websocket.js';
 import dat from "https://cdn.skypack.dev/dat.gui";
 
 
-var camera_position
+var camera_position;
+var users_pos = null;
+var entity_state = null;
 const _WS = new WS();
 
 const gui = new dat.GUI();
 const folder = gui.addFolder('Links');
 const linkHolder = document.createElement('div');
-linkHolder.innerHTML = '<a class="dat-link" href="{{ url_for('accounts.logout') }}">Выйти</a>';
 
 function button_func() {
   window.location.href = '/logout';
@@ -28,8 +29,6 @@ const settings = {
 // Add a slider to the folder
 folder.add(settings, 'volume', 0, 100).name('Volume');
 folder.open();
-
-var users_pos = null
 
 class Warehouse{
   constructor(Warehouse) {
@@ -84,13 +83,13 @@ class Warehouse{
 
     this._scene.background = textur;
     
-    this._LoadLight( {{ light }} );
-    // this._LoadModel( {{ model }} );
-    this._DrawEdges( {{ line }} );
-    this._LoadEntity( {{ entity }} );
-    this._DrawFigure( {{ figure }} );
-    this._DrawArch( {{ arch }} );
-    //this._DrawTriangls( {{ figure }} );
+    // this._LoadLight( {{ light }} );
+    // // this._LoadModel( {{ model }} );
+    // this._DrawEdges( {{ line }} );
+    // this._LoadEntity( {{ entity }} );
+    // this._DrawFigure( {{ figure }} );
+    // this._DrawArch( {{ arch }} );
+    // //this._DrawTriangls( {{ figure }} );
     this._RAF();
   };
 
@@ -275,7 +274,8 @@ class Warehouse{
     }
      //create shapes from json
     _LoadEntity(data) {
-         //draw all shapes from source
+        console.log(data)
+        //draw all shapes from source
         for (const [key, value] of Object.entries(data)) {
              //draw color or texture
             let material;
@@ -332,16 +332,26 @@ class Warehouse{
         camera_position = JSON.stringify(this._camera.position)
       };
 
-      // Send user users_pos
+      // Send users state
       _WS._sendMessage(JSON.stringify({'users_pos': {'{{ user }}': users_pos}}));
 
+      // Send entity state
+      _WS._sendMessage(JSON.stringify({'entity_state': {'{{ user }}': entity_state}}));
+
+      // echo from ws
       const receivedData = _WS.getReceivedData();
+
+
       if (receivedData){
-        console.log(receivedData)
+        
         var recivedDataJson = JSON.parse(receivedData)
         if (recivedDataJson["users_pos"]){
           this._LoadUserModel(recivedDataJson["users_pos"])
           users_pos = recivedDataJson["users_pos"]
+
+        }else if (recivedDataJson["entity_state"]){
+          this._LoadEntity( recivedDataJson["entity_state"] );
+          entity_state = recivedDataJson["entity_state"]
         };
         _WS.receivedData = null;
       };

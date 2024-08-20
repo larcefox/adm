@@ -1,7 +1,7 @@
 from datetime import datetime
 from src import bcrypt, db
 import uuid
-import libs.load_env as lib_env
+import lib.load_env as lib_env
 from loguru import logger
 from flask_login import UserMixin
 
@@ -24,7 +24,6 @@ class Role(db.Model):
         db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
     )
     name = db.Column(db.String(64), index=True)
-
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
     is_author = db.Column(db.Boolean, nullable=False, default=False)
     is_customer = db.Column(db.Boolean, nullable=False, default=False)
