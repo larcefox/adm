@@ -12,12 +12,20 @@ from sqlalchemy.schema import CreateSchema
 
 # Schema creation
 schema = config('DB_SCHEMA')
+world_schema = config('WORLD_DB_SCHEMA')
 conn = create_engine(config('DATABASE_URL'))
+
+# Creating schemas
 
 with conn.connect() as connection:
     if not inspect(connection).has_schema(schema):
         connection.execute(CreateSchema(schema))
         connection.commit()
+    
+    if not inspect(connection).has_schema(world_schema):
+        connection.execute(CreateSchema(world_schema))
+        connection.commit()
+    
 
 # Settings
 app = Flask(__name__)
@@ -35,9 +43,11 @@ logger.add(sys.stderr, format="{time} {level} {message}", filter="admin", level=
 # Registering blueprints
 from src.accounts.views import accounts_bp
 from src.core.views import core_bp
+from src.world.views import world_bp
 
 app.register_blueprint(accounts_bp)
 app.register_blueprint(core_bp)
+app.register_blueprint(world_bp)
 
 
 # user_loader callback

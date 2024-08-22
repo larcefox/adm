@@ -6,7 +6,7 @@ class WS {
 
     _Initialize() {
         // Create a new WebSocket instance
-        this._websocket = new WebSocket('ws://localhost:8765');
+        this._websocket = new WebSocket('ws://192.168.31.92:8765');
 
         // Connection opened
         this._websocket.onopen = (event) => {
@@ -25,6 +25,7 @@ class WS {
         this._websocket.onerror = (event) => {
             console.log("WebSocket error: " + event.data);
         };
+
     }
 
     _sendMessage(message) {
@@ -45,6 +46,11 @@ class WS {
     // Method to access the received data
     getReceivedData() {
         return this.receivedData;
+    }
+
+    // WS status
+    getState() {
+        return this._websocket.readyState;
     }
 }
 

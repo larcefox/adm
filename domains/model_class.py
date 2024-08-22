@@ -35,16 +35,16 @@ class Model(abc.ABC, ModelManager):
         pass
 
     def get_name(self, model_type):
-        model_number = self.manager.get_model_list(model_type).index(self)
+        model_number = hash(self)
         if model_type == 'model':
-            return ''.join(('Model', str(model_number)))
+            return ''.join(('model', str(model_number)))
         else:
             return 'NaN'
 
 class ModelOBJ(Model):
     def __init__(
             self,
-            name: str = 'Model',
+            name: str = 'model',
             static_path: str = './static/3d_models/',
             path: str = None,
             position: dict = {'x': 10, 'y': 10, 'z': 10},
