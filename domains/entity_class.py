@@ -68,11 +68,12 @@ class Entity(abc.ABC, Entity_manager):
         pass
 
     def get_name(self, entity_type):
-        entity_number = self.manager.get_entity_list(entity_type).index(self)
+        # entity_number = self.manager.get_entity_list(entity_type).index(self)
+        entity_number = hash(self)
         if entity_type == 'shape':
-            return ''.join(('Shape', str(entity_number)))
+            return ''.join(('shape', str(entity_number)))
         elif entity_type == 'camera':
-            return  ''.join(('Camera', str(entity_number)))
+            return  ''.join(('camera', str(entity_number)))
         elif entity_type == 'light':
             return  ''.join(('light', str(entity_number)))
         elif entity_type == 'line':
@@ -87,7 +88,7 @@ class Line(Entity):
     def __init__(
             self,
             name: str = 'Line',
-            color:int = 0xffffff,
+            color:int = 0xff0000,
             position1: dict = {'x': 0, 'y': 0, 'z': 0}, 
             position2: dict = {'x': 0, 'y': 0, 'z': 0}, 
             material_type: str = 'LineBasicMaterial',

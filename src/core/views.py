@@ -24,7 +24,7 @@ def home():
                             is_admin=is_admin,
                             title='QurE',
                             body='body',
-                            light=objects_dict['lights'], 
+                            light=objects_dict['light'], 
                             camera=objects_dict['camera'], 
                             entity=objects_dict['shape'],
                             line=objects_dict['line'],

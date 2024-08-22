@@ -72,7 +72,7 @@ def send_data():
 
     # TODO rewrite for loop creation
     camera = ef.create('camera')
-    lights = {
+    light = {
             light.name:
             light.return_dict() for light in Entity.manager.get_entity_list('light')
             }
@@ -99,7 +99,7 @@ def send_data():
 
     return {
             'camera': camera.return_dict(), 
-            'lights': json.dumps(lights),
+            'light': json.dumps(light),
             'shape': json.dumps(shapes),
             'line': json.dumps(lines),
             'figure': json.dumps(figures),

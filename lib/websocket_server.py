@@ -10,11 +10,42 @@ from lib.postgres_con import Database
 
 logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO", retention="10 days")
 users_position = {}
-entity_state = {}
-db = Database()
 
+async def get_objects(obj)->dict:
+    db = Database()
+    await db.connect()
+    # Geting entity data from db
+    # SELECT data FROM world.entity WHERE data ?| 'Shape%'
+    query = f"""
+        SELECT data FROM world.{obj} WHERE data ?| 
+            array(SELECT ARRAY (SELECT key FROM  world.{obj}, lateral jsonb_each_text(data) WHERE key LIKE '{obj}%'))
+        ;
+        """
+    db_data = await db.execute_query(query)
+    await db.disconnect()
+    
+    dict_data = {}
+    if db_data:
+        for row in db_data:
+            dict_data.update(json.loads(dict(row)['data']))
+    return dict_data
+
+async def get_graphical_obj():
+    # Get entity from DB
+    graphical_obj = {
+        'entity_state': await get_objects('shape'),
+        'light_state': await get_objects('light'),
+        'line_state': await get_objects('line'),
+        'figure_state': await get_objects('figure'),
+        'model_state': await get_objects('model'),
+        'arch_state': await get_objects('arch')
+    }
+    return graphical_obj
+
+graphical_obj = asyncio.run(get_graphical_obj())
 
 async def echo_messages(websocket, path):
+    
     while True:
         data = await websocket.recv()
         data = json.loads(data)
@@ -34,44 +65,25 @@ async def echo_messages(websocket, path):
                             pass
                         else:
                             await websocket.send(json.dumps({'users_pos': other_users}))
-                case 'entity_state':
-                    
-                    # Geting entity data from db
-                    # SELECT data FROM world.entity WHERE data ?| 'Shape%'
-                    query = """
-                        SELECT data FROM world.entity WHERE data ?| 
-                            array(SELECT ARRAY (SELECT key FROM  world.entity, lateral jsonb_each_text(data) WHERE key LIKE 'Shape%'))
-                        ;
-                        """
-                    entity_db_data = await db.execute_query(query)
-                    if entity_db_data:
-                        for row in entity_db_data:
-                            print(dict(row)['data'])
-                            entity_state.update(json.loads(dict(row)['data']))
+                case 'all_3d_data':
+                    print('got_all_3d_request')
+                    await websocket.send(json.dumps({data_key: graphical_obj}))
+                    print('data sended')
 
-                        for user in data[data_key]:
-                            current_hash = dict_hash(entity_state)
-                            user_hash = dict_hash(data[data_key][user])
-                            print(current_hash, entity_state)
-                            print(user_hash, data[data_key][user])
-                            if current_hash == user_hash:
-                                print('equial')
-                                pass
-                            else:
-                                print('not equial')
-                                await websocket.send(json.dumps({'entity_state': entity_state}))
                 case _:
-                    await websocket.send('Data not recognized: ', json.dumps(data))
+                    if data_key in graphical_obj and graphical_obj[data_key]:
+                        await websocket.send(json.dumps({data_key: graphical_obj[data_key]}))
+                        
+                    else:
+                        print(data_key, 'Object key not found!')
 
 async def main():
-    await db.connect()
     try:
         logger.info("Trying to use port and host")
-        async with websockets.serve(echo_messages, "localhost", 8765):
+        async with websockets.serve(echo_messages, "0.0.0.0", 8765):
             await asyncio.Future()
     except OSError as e:
         logger.info("Websocket error, may be already started")
-    await db.disconnect()
 
 def dict_hash(dictionary: Dict[str, Any]) -> str:
     """MD5 hash of a dictionary."""

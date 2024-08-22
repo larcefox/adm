@@ -8,27 +8,22 @@ import dat from "https://cdn.skypack.dev/dat.gui";
 
 
 var camera_position;
+
 var users_pos = null;
 var entity_state = null;
+var light_state = null;
+var line_state = null;
+var figure_state = null;
+var model_state = null;
+var arch_state = null;
+var all_3d_data = null;
+
+let lastSentTime = 0;
+const throttleTime = 10000; // milliseconds
+
+
+
 const _WS = new WS();
-
-const gui = new dat.GUI();
-const folder = gui.addFolder('Links');
-const linkHolder = document.createElement('div');
-
-function button_func() {
-  window.location.href = '/logout';
-};
-
-folder.add({Logout: button_func}, 'Logout');
-
-const settings = {
-  volume: 50  // Slider will control this property
-};
-
-// Add a slider to the folder
-folder.add(settings, 'volume', 0, 100).name('Volume');
-folder.open();
 
 class Warehouse{
   constructor(Warehouse) {
@@ -49,7 +44,6 @@ class Warehouse{
     // Not working!!!
     window.addEventListener('resize', () => {
       this._OnWindowResize();
-      this._threejs.setSize( window.innerWidth  - 15 , window.innerHeight - 20);
     }, false);
 
     this._scene = new THREE.Scene();
@@ -64,7 +58,6 @@ class Warehouse{
         {{ camera.position['y'] }},
         {{ camera.position['z'] }}
       );
-
 
     const controls = new OrbitControls(
       this._camera, this._threejs.domElement);
@@ -83,7 +76,7 @@ class Warehouse{
 
     this._scene.background = textur;
     
-    // this._LoadLight( {{ light }} );
+    this._LoadLight( {{ light }} );
     // // this._LoadModel( {{ model }} );
     // this._DrawEdges( {{ line }} );
     // this._LoadEntity( {{ entity }} );
@@ -93,84 +86,123 @@ class Warehouse{
     this._RAF();
   };
 
-    _DrawArch(data){
-        for (const [key, value] of Object.entries(data)) {
-            
-          const vertices = new Float32Array( value.vertices );
+  _PlayRadio(){
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audio = new Audio('http://localhost:8100/8bit');
+    audio.crossOrigin = "anonymous";
+    const track = audioCtx.createMediaElementSource(audio);
+    track.connect(audioCtx.destination);
+    audio.play();
+  };
+
+  _PlayRadio1() {
+    // Load the audio stream
+    const listener = new THREE.AudioListener();
+    // _APP._camera.add(listener);
+
+    const audio = new THREE.Audio(listener);
+    const audioLoader = new THREE.AudioLoader();
+
+    // Load the stream from the Python server
+    audioLoader.load(
+      'http://localhost:8100/8bit',
+       function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.setVolume(0.9)
+        audio.play();
+    }, undefined,
+    function(err){
+      console.error('An error occurred while loading the audio stream:', err)
+    });
+    _APP._camera.add(listener);
+  };
+  _RemoveEntitys() {
+    while(_APP._scene.children.length > 0){ 
+      _APP._scene.remove(_APP._scene.children[0]);
+    };
+  };
+
+  _DrawArch(data){
+    console.log('_DrawArch')
+      for (const [key, value] of Object.entries(data)) {
           
-          const indices = value.faces;
-
-
-          const material = new THREE[value.material_type](value.material);
-
-          const geometry = new THREE.BufferGeometry();
-          geometry.setIndex( indices );
-
-          geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-
-          const mesh = new THREE.Mesh( geometry, material );
-          mesh.rotation.set(...Object.values(value.rotation));
-          this._scene.add( mesh )
+        const vertices = new Float32Array( value.vertices );
         
-        }
-    };
+        const indices = value.faces;
 
-    _DrawTriangls(data){
-        for (const [key, value] of Object.entries(data)) {
-            var vertices = new Float32Array(value.vertices.flat())
-            var holes = [];
-            var geometry = new THREE.BufferGeometry();
-            
-            var indices = Earcut.triangulate(vertices, [], 3);
-            
-            geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 2 ) );
-            geometry.setIndex(indices);
-            const material = new THREE[value.material_type](value.material);
-            const mesh = new THREE.Mesh( geometry, material );
-            this._scene.add( mesh )
 
-                
-        }
-    };
-    _DrawFigure( data ) {
+        const material = new THREE[value.material_type](value.material);
 
-        for (const [key, value] of Object.entries(data)) {
-          var points3d = [];
-          value.vertices.forEach((raw) => {
-            raw.forEach((coord) => {
-              points3d.push(new THREE.Vector3(coord[0], coord[1], coord[2]));  
-            })
-          })
+        const geometry = new THREE.BufferGeometry();
+        geometry.setIndex( indices );
+
+        geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+
+        const mesh = new THREE.Mesh( geometry, material );
+        mesh.rotation.set(...Object.values(value.rotation));
+        this._scene.add( mesh )
+      
+      }
+  };
+
+  _DrawTriangls(data){
+    console.log('_DrawTriangls')
+      for (const [key, value] of Object.entries(data)) {
+          var vertices = new Float32Array(value.vertices.flat())
+          var holes = [];
+          var geometry = new THREE.BufferGeometry();
           
-          var geom = new THREE.BufferGeometry().setFromPoints(points3d);
-          var cloud = new THREE.Points(
-            geom,
-            new THREE.PointsMaterial({ color: 0x99ccff, size: 2 })
-          );
-          this._scene.add( cloud );
+          var indices = Earcut.triangulate(vertices, [], 3);
+          
+          geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 2 ) );
+          geometry.setIndex(indices);
+          const material = new THREE[value.material_type](value.material);
+          const mesh = new THREE.Mesh( geometry, material );
+          this._scene.add( mesh )
 
-          // triangulate x, z
-          var indexDelaunay = Delaunator.from(
-            points3d.map(v => {
-              return [v.x, v.z];
-            })
-          );
+              
+      }
+  };
+  _DrawFigure( data ) {
+    console.log('_DrawFigure')
+      for (const [key, value] of Object.entries(data)) {
+        var points3d = [];
+        value.vertices.forEach((raw) => {
+          raw.forEach((coord) => {
+            points3d.push(new THREE.Vector3(coord[0], coord[1], coord[2]));  
+          })
+        })
+        
+        var geom = new THREE.BufferGeometry().setFromPoints(points3d);
+        var cloud = new THREE.Points(
+          geom,
+          new THREE.PointsMaterial({ color: 0x99ccff, size: 2 })
+        );
+        this._scene.add( cloud );
 
-          var meshIndex = []; // delaunay index => three.js index
-          for (let i = 0; i < indexDelaunay.triangles.length; i++){
-            meshIndex.push(indexDelaunay.triangles[i]);
-          }
+        // triangulate x, z
+        var indexDelaunay = Delaunator.from(
+          points3d.map(v => {
+            return [v.x, v.z];
+          })
+        );
 
-          geom.setIndex(meshIndex); // add three.js index to the existing geometry
-          geom.computeVertexNormals();
-          var mesh = new THREE.Mesh(
-            geom, // re-use the existing geometry
-            new THREE.MeshLambertMaterial({ color: "purple", wireframe: true })
-          );
-          this._scene.add(mesh);
-
+        var meshIndex = []; // delaunay index => three.js index
+        for (let i = 0; i < indexDelaunay.triangles.length; i++){
+          meshIndex.push(indexDelaunay.triangles[i]);
         }
-    }
+
+        geom.setIndex(meshIndex); // add three.js index to the existing geometry
+        geom.computeVertexNormals();
+        var mesh = new THREE.Mesh(
+          geom, // re-use the existing geometry
+          new THREE.MeshLambertMaterial({ color: "purple", wireframe: true })
+        );
+        this._scene.add(mesh);
+
+      }
+  }
 
   _LoadUserModel(data) {
     for (const [name, coordinates] of Object.entries(data)) {
@@ -203,159 +235,199 @@ class Warehouse{
     };
   };
 
-  _LoadModel(coordinates) {
-    const model_loader = new GLTFLoader();
-    model_loader.load(
-        './static/3d_models/cat/scene.gltf'
-          , (gltf) => {
-      gltf.scene.traverse(c => {
+  _LoadModel(data) {
+    console.log('_LoadModel')
+    for (const [key, value] of Object.entries(data)) {
+      const model_loader = new GLTFLoader();
+      model_loader.load(
+        value.path
+        , (gltf) => {
+        gltf.scene.traverse(c => {
         // c.castShadow = true;
         // c.receiveShadow = true;
         c.name = "model";
+        });
+        gltf.scene.position.set(...Object.values(value.position));
+        gltf.scene.rotation.set(...Object.values(value.rotation));
+        console.log(gltf.scene)
+        const { scale } = gltf.scene.scale
+        gltf.scene.scale.set(100,100,100)
+        this._scene.add(gltf.scene);
       });
-      gltf.scene.position.set(...Object.values(coordinates));
-      // gltf.scene.rotation.set(...Object.values(value.rotation));
-      this._scene.add(gltf.scene);
-    });
+    };
+  };
+
+  _DrawEdges(data) {
+    console.log('_DrawEdges')
+      for (const [key, value] of Object.entries(data)) {
+          const points = [];
+
+          const material = new THREE[value.material_type](value.material);
+
+          points.push( new THREE.Vector3( ...Object.values(value.position1)) );
+          points.push( new THREE.Vector3( ...Object.values(value.position2)) );
+
+          const geometry = new THREE[value.geometry_type]().setFromPoints( points );
+
+          const line = new THREE.Line( geometry, material );
+          this._scene.add( line );
+          
+        }
   }
 
-    _DrawEdges(data) {
-        for (const [key, value] of Object.entries(data)) {
-            const points = [];
-
-            const material = new THREE[value.material_type]({
-                color: value.color 
-            });
-
-            points.push( new THREE.Vector3( ...Object.values(value.position1)) );
-            points.push( new THREE.Vector3( ...Object.values(value.position2)) );
-
-            const geometry = new THREE[value.geometry_type]().setFromPoints( points );
-
-            const line = new THREE.Line( geometry, material );
-            this._scene.add( line );
-            
-         }
-    }
-
-     //create light from json
-    _LoadLight(data) {
-         //draw all shapes from source
-        for (const [key, value] of Object.entries(data)) {
-            const light = new THREE[value.light_type](
-                value.color, 
-                value.intencity
-            ); 
-            light.name = key;
-
-            if (value.light_type == 'DirectionalLight') {
-                light.position.set(...Object.values(value.position));
-                light.target.position.set(...Object.values(value.target_position));
-                light.castShadow = value.castShadow;
-                
-
-                light.shadow.bias = light.shadow.bias;
-                light.shadow.mapSize = light.shadow.mapSize;
-                light.shadow.bias = value.shadow.bias;
-                light.shadow.mapSize.width = value.shadow.mapSize.width;
-                light.shadow.mapSize.height = value.shadow.mapSize.height;
-                light.shadow.camera.near = value.shadow.camera.near;
-                light.shadow.camera.far = value.shadow.camera.far;
-                light.shadow.camera.left = value.shadow.camera.left;
-                light.shadow.camera.right = value.shadow.camera.right;
-                light.shadow.camera.top = value.shadow.camera.top;
-                light.shadow.camera.bottom = value.shadow.camera.bottom;
-
-                this._scene.add(light);
-            }else if (value.light_type == 'AmbientLight'){
-                this._scene.add(light);
-            }
-        }
-    }
-     //create shapes from json
-    _LoadEntity(data) {
-        console.log(data)
+    //create light from json
+  _LoadLight(data) {
+        console.log('_LoadLight')
         //draw all shapes from source
-        for (const [key, value] of Object.entries(data)) {
-             //draw color or texture
-            let material;
-            if ('texture' in value.material){
-                material = 
-                    new THREE[value.material_type]
-                  ({ map: new THREE.TextureLoader().load('{{ url_for('static', filename='textures/blueprint.jpg') }}'),
-                  side: THREE.DoubleSide,
-                  //encoding: THREE.sRGBEncoding,
-                  transparent: true,
-                  opacity: 0.8,
-                  //color: 0x004F00
-                  }); // put it to python platform_class
-                
-            }else{
-                material = new THREE[value.material_type](value.material);
-            }
+      for (const [key, value] of Object.entries(data)) {
+          const light = new THREE[value.light_type](
+              value.color, 
+              value.intencity
+          ); 
+          light.name = key;
 
-            const figure = new THREE[value.geometry_type](...Object.values(value.geometry));
-            const mesh = new THREE.Mesh(figure, material);
-            mesh.name = key;
-            mesh.castShadow = value.castShadow
-            mesh.receiveShadow = value.receiveShadow
-            this._scene.add(mesh);
+          if (value.light_type == 'DirectionalLight') {
+              light.position.set(...Object.values(value.position));
+              light.target.position.set(...Object.values(value.target_position));
+              light.castShadow = value.castShadow;
+              
 
-             //add mesh position
-            mesh.position.set(...Object.values(value.position));
+              light.shadow.bias = light.shadow.bias;
+              light.shadow.mapSize = light.shadow.mapSize;
+              light.shadow.bias = value.shadow.bias;
+              light.shadow.mapSize.width = value.shadow.mapSize.width;
+              light.shadow.mapSize.height = value.shadow.mapSize.height;
+              light.shadow.camera.near = value.shadow.camera.near;
+              light.shadow.camera.far = value.shadow.camera.far;
+              light.shadow.camera.left = value.shadow.camera.left;
+              light.shadow.camera.right = value.shadow.camera.right;
+              light.shadow.camera.top = value.shadow.camera.top;
+              light.shadow.camera.bottom = value.shadow.camera.bottom;
 
-             //add mesh rotation
-            mesh.rotation.set(...Object.values(value.rotation));
-        }
-    }
+              this._scene.add(light);
+          }else if (value.light_type == 'AmbientLight'){
+              this._scene.add(light);
+          }
+      }
+  }
+    //create shapes from json
+  _LoadEntity(data) {
+      console.log('_LoadEntity')
+      //draw all shapes from source
+      for (const [key, value] of Object.entries(data)) {
+            //draw color or texture
+          let material;
+          if ('texture' in value.material){
+              material = 
+                  new THREE[value.material_type]
+                ({ map: new THREE.TextureLoader().load('{{ url_for('static', filename='textures/blueprint.jpg') }}'),
+                side: THREE.DoubleSide,
+                //encoding: THREE.sRGBEncoding,
+                transparent: true,
+                opacity: 0.8,
+                //color: 0x004F00
+                }); // put it to python platform_class
+              
+          }else{
+              material = new THREE[value.material_type](value.material);
+          }
+
+          const figure = new THREE[value.geometry_type](...Object.values(value.geometry));
+          const mesh = new THREE.Mesh(figure, material);
+          mesh.name = key;
+          mesh.castShadow = value.castShadow
+          mesh.receiveShadow = value.receiveShadow
+          this._scene.add(mesh);
+
+            //add mesh position
+          mesh.position.set(...Object.values(value.position));
+
+            //add mesh rotation
+          mesh.rotation.set(...Object.values(value.rotation));
+      };
+  };
 
   _OnWindowResize() {
     this._camera.aspect = {{ camera.aspect_ratio }};
     this._camera.updateProjectionMatrix();
 
-    document.getElementById('control').width = 38
-    this._threejs.setSize(innerWidth, innerHeight - document.getElementById('control').width);
-  }
-
-  _RemoveEntitys() {
-    while(this._scene.children.length > 0){ 
-      this._scene.remove(this._scene.children[0]); 
-    };
+    this._threejs.setSize(innerWidth, innerHeight);
   };
 
-  _RAF() {
-    requestAnimationFrame(async () => {
-
+  _GetUsersPos(){
+    if (_WS.getState() == 1){
       // Send camera (user) position
       if (camera_position != JSON.stringify(this._camera.position)){
         _WS._sendMessage(JSON.stringify({'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}));
         camera_position = JSON.stringify(this._camera.position)
+        console.log('send pos')
       };
 
       // Send users state
       _WS._sendMessage(JSON.stringify({'users_pos': {'{{ user }}': users_pos}}));
 
-      // Send entity state
-      _WS._sendMessage(JSON.stringify({'entity_state': {'{{ user }}': entity_state}}));
+      // echo from ws
+      const receivedData = _WS.getReceivedData();
+      if (receivedData){
+        var recivedDataJson = JSON.parse(receivedData)
+        if (recivedDataJson["users_pos"]){
+          this._LoadUserModel(recivedDataJson["users_pos"])
+          users_pos = recivedDataJson["users_pos"]
+          _WS.receivedData = null;
+        };
+      };
+
+    }
+  }
+
+  _SendRequest3D(){
+    console.log('send all 3d request')
+    if (_WS.getState() == 1){
+      // Request for all_3d_data
+      // if (all_3d_data == null){};
+      _WS._sendMessage(JSON.stringify({'all_3d_data': {'{{ user }}': all_3d_data}}));
+      
+    };
+  };
+
+  _Get3DObjects(){
+    if (_WS.getState() == 1){
 
       // echo from ws
       const receivedData = _WS.getReceivedData();
 
 
       if (receivedData){
-        
+
         var recivedDataJson = JSON.parse(receivedData)
-        if (recivedDataJson["users_pos"]){
-          this._LoadUserModel(recivedDataJson["users_pos"])
-          users_pos = recivedDataJson["users_pos"]
-
-        }else if (recivedDataJson["entity_state"]){
-          this._LoadEntity( recivedDataJson["entity_state"] );
-          entity_state = recivedDataJson["entity_state"]
+        if (recivedDataJson["all_3d_data"]){
+          console.log(recivedDataJson["all_3d_data"]["line_state"])
+          this._LoadEntity( recivedDataJson["all_3d_data"]["entity_state"] );
+          //this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
+          //this._DrawEdges( recivedDataJson["all_3d_data"]["line_state"] );
+          //this._DrawFigure( recivedDataJson["all_3d_data"]["figure_state"] );
+          // Not working
+          this._LoadModel( recivedDataJson["all_3d_data"]["model_state"] );
+          //this._DrawArch( recivedDataJson["all_3d_data"]["arch_state"] );
+          all_3d_data = recivedDataJson["all_3d_data"]
+          _WS.receivedData = null;
         };
-        _WS.receivedData = null;
       };
+    };
 
+  };
+
+  _RAF() {
+    requestAnimationFrame(async () => {
+      const now = Date.now();
+      if (now - lastSentTime >= throttleTime / 100) {
+        this._GetUsersPos();
+        lastSentTime = now;
+      }
+
+      this._Get3DObjects();
+      
+      
       this._threejs.render(this._scene, this._camera);
       this._RAF();
     });
@@ -367,10 +439,26 @@ let _APP = null;
 window.addEventListener('DOMContentLoaded', () => {
 
   _APP = new Warehouse();
+  _APP._SendRequest3D()
 
-  // Пример отправки сообщения
-  document.getElementById('mylink').addEventListener('click', function() {
-    var message = "Привет1"
-    _WS._sendMessage(message);
-  });
+  const gui = new dat.GUI();
+  const folder = gui.addFolder('Links');
+
+  function button_func() {
+    window.location.href = '/logout';
+  };
+
+  folder.add({Logout: button_func}, 'Logout');
+  folder.add({LoadWorld: _APP._SendRequest3D}, 'LoadWorld');
+  folder.add({ClearWorld: _APP._RemoveEntitys}, 'ClearWorld');
+  folder.add({PlayRadio: _APP._PlayRadio}, 'PlayRadio');
+
+  const settings = {
+    volume: 50  // Slider will control this property
+  };
+
+  // Add a slider to the folder
+  folder.add(settings, 'volume', 0, 100).name('Volume');
+  folder.open();
+
 });
