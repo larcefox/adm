@@ -4,6 +4,7 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
+import { PositionalRadio } from './static/js/positional_radio.js';
 import dat from "https://cdn.skypack.dev/dat.gui";
 
 
@@ -41,13 +42,14 @@ class Warehouse{
     this._threejs.setSize( window.innerWidth  - 15 , window.innerHeight - 20); 
     document.getElementById("app").appendChild(this._threejs.domElement);
 
-    // Not working!!!
     window.addEventListener('resize', () => {
       this._OnWindowResize();
     }, false);
 
     this._scene = new THREE.Scene();
 
+    // Camera setup
+    const listener = new THREE.AudioListener();
     const fov = {{ camera.fild_of_view }};
     const aspect = {{ camera.aspect_ratio }};
     const near = {{ camera.clipping_plane_near }};
@@ -58,11 +60,29 @@ class Warehouse{
         {{ camera.position['y'] }},
         {{ camera.position['z'] }}
       );
+    this._camera.add( listener );
+    this._positionalAudio = new THREE.PositionalAudio(listener);
 
-    const controls = new OrbitControls(
-      this._camera, this._threejs.domElement);
-    controls.target.set(0, 20, 0);
-    controls.update();
+    // Set the audio element as the source for the positional audio
+    this._positionalAudio.setMediaElementSource(this._audioElement);
+    
+    // Set additional properties for positional audio
+    this._positionalAudio.setRefDistance(1); // Set the reference distance for max volume
+    this._positionalAudio.setRolloffFactor(1); // Determines how the audio volume decreases with distance
+    this._positionalAudio.setMaxDistance(20); // Maximum distance the audio will be heard
+    this._positionalAudio.setVolume(0.5); // Set the volume level
+
+    // Controls setup
+    this._controls = new OrbitControls(
+    this._camera, this._threejs.domElement);
+    this._controls.target.set(0, 20, 0);
+
+    // Optional: Configure controls for a more FPS-like experience
+    this._controls.enableDamping = true; // smooth movement
+    this._controls.dampingFactor = 0.1;
+    this._controls.screenSpacePanning = false; // keep camera upright
+    // this._controls.maxPolarAngle = Math.PI / 2; // limit vertical rotation to 90 degrees
+    // this._controls.minPolarAngle = Math.PI / 2; // restrict to horizontal plane (optional)
 
     const loader = new THREE.CubeTextureLoader();
     const textur = loader.load([
@@ -76,7 +96,7 @@ class Warehouse{
 
     this._scene.background = textur;
     
-    this._LoadLight( {{ light }} );
+    //this._LoadLight( {{ light }} );
     // // this._LoadModel( {{ model }} );
     // this._DrawEdges( {{ line }} );
     // this._LoadEntity( {{ entity }} );
@@ -86,37 +106,6 @@ class Warehouse{
     this._RAF();
   };
 
-  _PlayRadio(){
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const audio = new Audio('http://localhost:8100/8bit');
-    audio.crossOrigin = "anonymous";
-    const track = audioCtx.createMediaElementSource(audio);
-    track.connect(audioCtx.destination);
-    audio.play();
-  };
-
-  _PlayRadio1() {
-    // Load the audio stream
-    const listener = new THREE.AudioListener();
-    // _APP._camera.add(listener);
-
-    const audio = new THREE.Audio(listener);
-    const audioLoader = new THREE.AudioLoader();
-
-    // Load the stream from the Python server
-    audioLoader.load(
-      'http://localhost:8100/8bit',
-       function(buffer) {
-        audio.setBuffer(buffer);
-        audio.setLoop(true);
-        audio.setVolume(0.9)
-        audio.play();
-    }, undefined,
-    function(err){
-      console.error('An error occurred while loading the audio stream:', err)
-    });
-    _APP._camera.add(listener);
-  };
   _RemoveEntitys() {
     while(_APP._scene.children.length > 0){ 
       _APP._scene.remove(_APP._scene.children[0]);
@@ -237,6 +226,7 @@ class Warehouse{
 
   _LoadModel(data) {
     console.log('_LoadModel')
+    console.log(data)
     for (const [key, value] of Object.entries(data)) {
       const model_loader = new GLTFLoader();
       model_loader.load(
@@ -245,13 +235,17 @@ class Warehouse{
         gltf.scene.traverse(c => {
         // c.castShadow = true;
         // c.receiveShadow = true;
-        c.name = "model";
+        //c.name = "model";
         });
         gltf.scene.position.set(...Object.values(value.position));
         gltf.scene.rotation.set(...Object.values(value.rotation));
-        console.log(gltf.scene)
         const { scale } = gltf.scene.scale
-        gltf.scene.scale.set(100,100,100)
+        gltf.scene.scale.set(10,10,10)
+
+        if (value['positional_audio']){
+          const _PositionalRadio = new PositionalRadio(THREE, this._camera, gltf.scene, value['positional_audio'])
+        }
+
         this._scene.add(gltf.scene);
       });
     };
@@ -403,10 +397,9 @@ class Warehouse{
         if (recivedDataJson["all_3d_data"]){
           console.log(recivedDataJson["all_3d_data"]["line_state"])
           this._LoadEntity( recivedDataJson["all_3d_data"]["entity_state"] );
-          //this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
+          this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
           //this._DrawEdges( recivedDataJson["all_3d_data"]["line_state"] );
           //this._DrawFigure( recivedDataJson["all_3d_data"]["figure_state"] );
-          // Not working
           this._LoadModel( recivedDataJson["all_3d_data"]["model_state"] );
           //this._DrawArch( recivedDataJson["all_3d_data"]["arch_state"] );
           all_3d_data = recivedDataJson["all_3d_data"]
@@ -424,6 +417,7 @@ class Warehouse{
         this._GetUsersPos();
         lastSentTime = now;
       }
+      this._controls.update();
 
       this._Get3DObjects();
       
@@ -440,25 +434,28 @@ window.addEventListener('DOMContentLoaded', () => {
 
   _APP = new Warehouse();
   _APP._SendRequest3D()
+  // const _PositionalRadio = new PositionalRadio(THREE, _APP._camera, _APP._scene, )
 
   const gui = new dat.GUI();
-  const folder = gui.addFolder('Links');
-
+  const links_folder = gui.addFolder('Links');
+  const world_folder = gui.addFolder('World');
+  const audio_folder = gui.addFolder('Radio');
   function button_func() {
     window.location.href = '/logout';
   };
 
-  folder.add({Logout: button_func}, 'Logout');
-  folder.add({LoadWorld: _APP._SendRequest3D}, 'LoadWorld');
-  folder.add({ClearWorld: _APP._RemoveEntitys}, 'ClearWorld');
-  folder.add({PlayRadio: _APP._PlayRadio}, 'PlayRadio');
+  links_folder.add({Logout: button_func}, 'Logout');
+  world_folder.add({LoadWorld: _APP._SendRequest3D}, 'LoadWorld');
+  world_folder.add({ClearWorld: _APP._RemoveEntitys}, 'ClearWorld');
+  
+  // audio_folder.add(_PositionalRadio._audio_controls, 'playAudio').name('Play Radio');
+  // audio_folder.add(_PositionalRadio._audio_controls, 'pauseAudio').name('Pause Radio');
 
   const settings = {
-    volume: 50  // Slider will control this property
+    volume: 1  // Slider will control this property
   };
-
   // Add a slider to the folder
-  folder.add(settings, 'volume', 0, 100).name('Volume');
-  folder.open();
+  audio_folder.add(settings, 'volume', 0, 1).name('Volume');
+  //folder.open();
 
 });
