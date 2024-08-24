@@ -1,21 +1,21 @@
 class PositionalRadio {
-    constructor(THREE, camera, model, stream) {
-        this._Initialize(THREE, camera, model, stream);
+    constructor(model, stream) {
+        this._Initialize(model, stream);
 
     }
 
-    _Initialize(THREE, camera, model, stream) {
+    _Initialize(positionalAudio, model, stream) {
 
         // const stream = 'http://192.168.31.92:8100/8bit'
         // const ambient = '{{ url_for('static', filename='sounds/ambient.mp3') }}'
 
         // create an AudioListener and add it to the camera
-        const listener = new THREE.AudioListener();
-        camera.add( listener );
+        // const listener = new THREE.AudioListener();
+        // camera.add( listener );
 
         // Create a positional audio object and attach it to the cube
-        this._positionalAudio = new THREE.PositionalAudio(listener);
-        model.add( this._positionalAudio );
+        // this._positionalAudio = new THREE.PositionalAudio(listener);
+        model.add( this.positionalAudio);
         
         // Create an HTML audio element for streaming audio
         this._audioElement = document.createElement('audio');
@@ -41,14 +41,14 @@ class PositionalRadio {
             }
         };
         
-        // Set the audio element as the source for the positional audio
-        this._positionalAudio.setMediaElementSource(this._audioElement);
+        // // Set the audio element as the source for the positional audio
+        // this._positionalAudio.setMediaElementSource(this._audioElement);
         
-        // Set additional properties for positional audio
-        this._positionalAudio.setRefDistance(1); // Set the reference distance for max volume
-        this._positionalAudio.setRolloffFactor(1); // Determines how the audio volume decreases with distance
-        this._positionalAudio.setMaxDistance(20); // Maximum distance the audio will be heard
-        this._positionalAudio.setVolume(0.5); // Set the volume level
+        // // Set additional properties for positional audio
+        // this._positionalAudio.setRefDistance(1); // Set the reference distance for max volume
+        // this._positionalAudio.setRolloffFactor(1); // Determines how the audio volume decreases with distance
+        // this._positionalAudio.setMaxDistance(20); // Maximum distance the audio will be heard
+        // this._positionalAudio.setVolume(0.5); // Set the volume level
 
     }
 
