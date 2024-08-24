@@ -1,11 +1,11 @@
 class PositionalRadio {
-    constructor(model, stream) {
-        this._Initialize(model, stream);
+    constructor(THREE, model, stream, listener) {
+        this._Initialize(THREE, model, stream, listener);
 
     }
 
-    _Initialize(positionalAudio, model, stream) {
-
+    _Initialize(THREE, model, stream, listener) {
+        console.log(model, stream, listener)
         // const stream = 'http://192.168.31.92:8100/8bit'
         // const ambient = '{{ url_for('static', filename='sounds/ambient.mp3') }}'
 
@@ -14,14 +14,24 @@ class PositionalRadio {
         // camera.add( listener );
 
         // Create a positional audio object and attach it to the cube
-        // this._positionalAudio = new THREE.PositionalAudio(listener);
-        model.add( this.positionalAudio);
+        this._positionalAudio = new THREE.PositionalAudio(listener);
+        model.add( this._positionalAudio);
         
         // Create an HTML audio element for streaming audio
         this._audioElement = document.createElement('audio');
+        // Set the audio element as the source for the positional audio
+        this._positionalAudio.setMediaElementSource(this._audioElement);
+
+
         this._audioElement.src = stream
         this._audioElement.crossOrigin = 'anonymous'; // Enable cross-origin requests if needed
         this._audioElement.loop = true;
+
+        // Set additional properties for positional audio
+        this._positionalAudio.setRefDistance(5); // Set the reference distance for max volume
+        this._positionalAudio.setRolloffFactor(100); // Determines how the audio volume decreases with distance
+        this._positionalAudio.setMaxDistance(6); // Maximum distance the audio will be heard
+        this._positionalAudio.setVolume(100); // Set the volume level
 
         // Wait for the audio element to be ready before playing
         this._audioElement.addEventListener('canplay', () => {
