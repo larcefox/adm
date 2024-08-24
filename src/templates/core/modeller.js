@@ -49,6 +49,7 @@ class Warehouse{
     this._scene = new THREE.Scene();
 
     // Camera setup
+    const listener = new THREE.AudioListener();
     const fov = {{ camera.fild_of_view }};
     const aspect = {{ camera.aspect_ratio }};
     const near = {{ camera.clipping_plane_near }};
@@ -59,6 +60,17 @@ class Warehouse{
         {{ camera.position['y'] }},
         {{ camera.position['z'] }}
       );
+    this._camera.add( listener );
+    this._positionalAudio = new THREE.PositionalAudio(listener);
+
+    // Set the audio element as the source for the positional audio
+    this._positionalAudio.setMediaElementSource(this._audioElement);
+    
+    // Set additional properties for positional audio
+    this._positionalAudio.setRefDistance(1); // Set the reference distance for max volume
+    this._positionalAudio.setRolloffFactor(1); // Determines how the audio volume decreases with distance
+    this._positionalAudio.setMaxDistance(20); // Maximum distance the audio will be heard
+    this._positionalAudio.setVolume(0.5); // Set the volume level
 
     // Controls setup
     this._controls = new OrbitControls(
