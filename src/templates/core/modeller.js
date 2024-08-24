@@ -1,5 +1,5 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
@@ -49,7 +49,7 @@ class Warehouse{
     this._scene = new THREE.Scene();
 
     // Camera setup
-    const listener = new THREE.AudioListener();
+    this._listener = new THREE.AudioListener();
     const fov = {{ camera.fild_of_view }};
     const aspect = {{ camera.aspect_ratio }};
     const near = {{ camera.clipping_plane_near }};
@@ -60,17 +60,7 @@ class Warehouse{
         {{ camera.position['y'] }},
         {{ camera.position['z'] }}
       );
-    this._camera.add( listener );
-    this._positionalAudio = new THREE.PositionalAudio(listener);
-
-    // Set the audio element as the source for the positional audio
-    this._positionalAudio.setMediaElementSource(this._audioElement);
-    
-    // Set additional properties for positional audio
-    this._positionalAudio.setRefDistance(1); // Set the reference distance for max volume
-    this._positionalAudio.setRolloffFactor(1); // Determines how the audio volume decreases with distance
-    this._positionalAudio.setMaxDistance(20); // Maximum distance the audio will be heard
-    this._positionalAudio.setVolume(0.5); // Set the volume level
+    this._camera.add( this._listener );
 
     // Controls setup
     this._controls = new OrbitControls(
@@ -239,11 +229,10 @@ class Warehouse{
         });
         gltf.scene.position.set(...Object.values(value.position));
         gltf.scene.rotation.set(...Object.values(value.rotation));
-        const { scale } = gltf.scene.scale
-        gltf.scene.scale.set(10,10,10)
+        gltf.scene.scale.set(...Object.values(value.scale));
 
         if (value['positional_audio']){
-          const _PositionalRadio = new PositionalRadio(THREE, this._camera, gltf.scene, value['positional_audio'])
+          const _PositionalRadio = new PositionalRadio(THREE, gltf.scene, value['positional_audio'], this._listener);
         }
 
         this._scene.add(gltf.scene);
