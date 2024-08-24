@@ -4,7 +4,7 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
-import { Radio } from './static/js/positional_radio.js';
+import { PositionalRadio } from './static/js/positional_radio.js';
 import dat from "https://cdn.skypack.dev/dat.gui";
 
 
@@ -84,7 +84,7 @@ class Warehouse{
 
     this._scene.background = textur;
     
-    this._LoadLight( {{ light }} );
+    //this._LoadLight( {{ light }} );
     // // this._LoadModel( {{ model }} );
     // this._DrawEdges( {{ line }} );
     // this._LoadEntity( {{ entity }} );
@@ -214,6 +214,7 @@ class Warehouse{
 
   _LoadModel(data) {
     console.log('_LoadModel')
+    console.log(data)
     for (const [key, value] of Object.entries(data)) {
       const model_loader = new GLTFLoader();
       model_loader.load(
@@ -222,13 +223,17 @@ class Warehouse{
         gltf.scene.traverse(c => {
         // c.castShadow = true;
         // c.receiveShadow = true;
-        c.name = "model";
+        //c.name = "model";
         });
         gltf.scene.position.set(...Object.values(value.position));
         gltf.scene.rotation.set(...Object.values(value.rotation));
-        console.log(gltf.scene)
         const { scale } = gltf.scene.scale
         gltf.scene.scale.set(10,10,10)
+
+        if (value['positional_audio']){
+          const _PositionalRadio = new PositionalRadio(THREE, this._camera, gltf.scene, value['positional_audio'])
+        }
+
         this._scene.add(gltf.scene);
       });
     };
@@ -380,10 +385,9 @@ class Warehouse{
         if (recivedDataJson["all_3d_data"]){
           console.log(recivedDataJson["all_3d_data"]["line_state"])
           this._LoadEntity( recivedDataJson["all_3d_data"]["entity_state"] );
-          //this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
+          this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
           //this._DrawEdges( recivedDataJson["all_3d_data"]["line_state"] );
           //this._DrawFigure( recivedDataJson["all_3d_data"]["figure_state"] );
-          // Not working
           this._LoadModel( recivedDataJson["all_3d_data"]["model_state"] );
           //this._DrawArch( recivedDataJson["all_3d_data"]["arch_state"] );
           all_3d_data = recivedDataJson["all_3d_data"]
@@ -418,7 +422,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   _APP = new Warehouse();
   _APP._SendRequest3D()
-  const _PositionalRadio = new PositionalRadio(THREE, _APP._camera, _APP._scene, )
+  // const _PositionalRadio = new PositionalRadio(THREE, _APP._camera, _APP._scene, )
 
   const gui = new dat.GUI();
   const links_folder = gui.addFolder('Links');
@@ -432,13 +436,12 @@ window.addEventListener('DOMContentLoaded', () => {
   world_folder.add({LoadWorld: _APP._SendRequest3D}, 'LoadWorld');
   world_folder.add({ClearWorld: _APP._RemoveEntitys}, 'ClearWorld');
   
-  audio_folder.add(_PositionalRadio._audio_controls, 'playAudio').name('Play Radio');
-  audio_folder.add(_PositionalRadio._audio_controls, 'pauseAudio').name('Pause Radio');
+  // audio_folder.add(_PositionalRadio._audio_controls, 'playAudio').name('Play Radio');
+  // audio_folder.add(_PositionalRadio._audio_controls, 'pauseAudio').name('Pause Radio');
 
   const settings = {
-    volume: 50  // Slider will control this property
+    volume: 1  // Slider will control this property
   };
-
   // Add a slider to the folder
   audio_folder.add(settings, 'volume', 0, 1).name('Volume');
   //folder.open();

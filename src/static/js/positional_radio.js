@@ -1,22 +1,12 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
+class PositionalRadio {
+    constructor(THREE, camera, model, stream) {
+        this._Initialize(THREE, camera, model, stream);
 
-
-class Radio {
-    constructor(camera, scene) {
-        this._Initialize(camera, scene);
-        this._camera = camera;
-        this._scene = scene;
     }
 
-    _Initialize(camera, scene) {
-        // create an object for the sound to play from
-        const sphere = new THREE.SphereGeometry( 1, 8, 4 );
-        const material = new THREE.MeshPhongMaterial( { color: 0xff2200 } );
-        const mesh = new THREE.Mesh( sphere, material );
-        mesh.position.set(0, 50, 0)
-        scene.add( mesh );
+    _Initialize(THREE, camera, model, stream) {
 
-        const stream = 'http://192.168.31.92:8100/8bit'
+        // const stream = 'http://192.168.31.92:8100/8bit'
         // const ambient = '{{ url_for('static', filename='sounds/ambient.mp3') }}'
 
         // create an AudioListener and add it to the camera
@@ -25,13 +15,20 @@ class Radio {
 
         // Create a positional audio object and attach it to the cube
         this._positionalAudio = new THREE.PositionalAudio(listener);
-        mesh.add( this._positionalAudio );
+        model.add( this._positionalAudio );
         
         // Create an HTML audio element for streaming audio
         this._audioElement = document.createElement('audio');
         this._audioElement.src = stream
         this._audioElement.crossOrigin = 'anonymous'; // Enable cross-origin requests if needed
         this._audioElement.loop = true;
+
+        // Wait for the audio element to be ready before playing
+        this._audioElement.addEventListener('canplay', () => {
+            this._audioElement.play().catch(error => {
+                console.error('Error playing audio:', error);
+            });
+        });
 
         this._audio_controls = {
             playAudio: () => {
@@ -64,7 +61,7 @@ class Radio {
         this._audio_controls['pauseAudio']()
     }
 }
-export { Radio };
+export { PositionalRadio };
 
 // _PlayRadio(){
 //     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
