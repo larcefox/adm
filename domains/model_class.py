@@ -49,6 +49,7 @@ class ModelOBJ(Model):
             path: str = None,
             position: dict = {'x': 10, 'y': 10, 'z': 10},
             rotation: dict = {'x': 0, 'y': 0, 'z': 0},
+            scale: dict = {'x': 0, 'y': 0, 'z': 0},
             cast_shadow = True,
             receive_shadow = True
             ) -> None:
@@ -56,6 +57,7 @@ class ModelOBJ(Model):
         self.path = static_path + path
         self.position = position
         self.rotation = rotation
+        self.scale = scale
         self.cast_shadow = cast_shadow
         self.receive_shadow = receive_shadow
 
@@ -64,6 +66,7 @@ class ModelOBJ(Model):
                 'path': self.path,
                 'position': self.position,
                 'rotation': self.rotation,
+                'scale': self.scale,
                 'castShadow': self.cast_shadow,
                 'receiveShadow': self.receive_shadow
                 }
