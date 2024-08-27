@@ -6,7 +6,7 @@ class WS {
 
     _Initialize() {
         // Create a new WebSocket instance
-        this._websocket = new WebSocket('ws://192.168.31.92:8765');
+        this._websocket = new WebSocket('wss://qure.space/ws');
 
         // Connection opened
         this._websocket.onopen = (event) => {

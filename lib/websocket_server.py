@@ -80,10 +80,10 @@ async def echo_messages(websocket, path):
 async def main():
     try:
         logger.info("Trying to use port and host")
-        async with websockets.serve(echo_messages, "0.0.0.0", 8765):
+        async with websockets.serve(echo_messages, "127.0.0.1", 8765):
             await asyncio.Future()
     except OSError as e:
-        logger.info("Websocket error, may be already started")
+        logger.info("Websocket error, may be already started", e)
 
 def dict_hash(dictionary: Dict[str, Any]) -> str:
     """MD5 hash of a dictionary."""
