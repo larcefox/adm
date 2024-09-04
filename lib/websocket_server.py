@@ -69,6 +69,9 @@ async def echo_messages(websocket, path):
                     print('got_all_3d_request')
                     await websocket.send(json.dumps({data_key: graphical_obj}))
                     print('data sended')
+                    
+                case 'voice':
+                    print('it fucking works!')
 
                 case _:
                     if data_key in graphical_obj and graphical_obj[data_key]:

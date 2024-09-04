@@ -10,6 +10,7 @@ import dat from "https://cdn.skypack.dev/dat.gui";
 
 var camera_position;
 
+// World arrays
 var users_pos = null;
 var entity_state = null;
 var light_state = null;
@@ -18,6 +19,11 @@ var figure_state = null;
 var model_state = null;
 var arch_state = null;
 var all_3d_data = null;
+
+// Audio arrays
+var isRecording = false;
+var audioContext;
+var audioProcessorNode;
 
 let lastSentTime = 0;
 const throttleTime = 10000; // milliseconds
@@ -399,6 +405,58 @@ class Warehouse{
 
   };
 
+  async _startMicrophoneCapture() {
+    try {
+        // Check if getUserMedia is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('getUserMedia not supported on your browser!');
+            return;
+        }
+
+        // Access the microphone
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Initialize the AudioContext if not already done
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // Load the AudioWorkletProcessor if not already done
+        if (!audioProcessorNode) {
+            await audioContext.audioWorklet.addModule('audio-processor.js');
+            audioProcessorNode = new AudioWorkletNode(audioContext, 'audio-processor');
+            
+            // Listen for audio data from the processor
+            audioProcessorNode.port.onmessage = (event) => {
+                const audioData = event.data;
+                const float32Array = new Float32Array(audioData);
+                const buffer = float32Array.buffer;
+                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': buffer}}));
+                ws.send(buffer);
+            };
+        }
+
+        // Connect the audio nodes
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(audioProcessorNode);
+
+        isRecording = true;
+        console.log('Microphone recording started');
+    } catch (err) {
+        console.error('Error accessing the microphone: ' + err);
+    }
+  }
+
+  _stopMicrophoneCapture() {
+    if (audioContext && isRecording) {
+        // Stop the AudioContext
+        audioContext.suspend();
+
+        isRecording = false;
+        console.log('Microphone recording stopped');
+    }
+  }
+
   _RAF() {
     requestAnimationFrame(async () => {
       const now = Date.now();
@@ -447,4 +505,18 @@ window.addEventListener('DOMContentLoaded', () => {
   audio_folder.add(settings, 'volume', 0, 1).name('Volume');
   //folder.open();
 
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.code === 'Space' && !isRecording) { // Space key is pressed
+    _APP._startMicrophoneCapture();
+    console.log('Start recording');
+  }
+});
+
+document.addEventListener('keyup', (event) => {
+  if (event.code === 'Space' && isRecording) { // Space key is released
+    _APP._stopMicrophoneCapture();
+    console.log('Stop recording');
+  }
 });
