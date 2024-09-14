@@ -1,15 +1,16 @@
 from typing import Dict, Any
-import asyncio
 import websockets
 from loguru import logger
 import json
 import hashlib
 import asyncio
 from lib.postgres_con import Database
+import base64
 
 
 logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO", retention="10 days")
 users_position = {}
+connected_clients = set()
 
 async def get_objects(obj)->dict:
     db = Database()
@@ -44,18 +45,32 @@ async def get_graphical_obj():
 
 graphical_obj = asyncio.run(get_graphical_obj())
 
+async def broadcast_audio(data, sender, user):
+    if connected_clients:
+        disconnected_clients = []
+        # Send data to all connected clients, except the sender
+        for client in connected_clients:
+            if client != sender:
+                try:
+                    await client.send(json.dumps({'voice': {user: data}}))
+                except websockets.ConnectionClosedOK:
+                    print(f"Client {client.remote_address} disconnected.")
+                    disconnected_clients.append(client)
+        # Remove disconnected clients from the connected clients set
+        for client in disconnected_clients:
+            connected_clients.remove(client)
+
 async def echo_messages(websocket, path):
-    
+    connected_clients.add(websocket)
+    print(f"Client connected: {websocket.remote_address}")
     while True:
         data = await websocket.recv()
         data = json.loads(data)
-        
         for data_key in data:
             match data_key:
-                
                 case 'user_position':
                     users_position.update(data[data_key])
-                
+
                 case 'users_pos':
                     for user in data[data_key]:
                         other_users = {i:users_position[i] for i in users_position if i!=user}
@@ -65,20 +80,23 @@ async def echo_messages(websocket, path):
                             pass
                         else:
                             await websocket.send(json.dumps({'users_pos': other_users}))
+                case 'voice':
+                    for user in data[data_key]:
+                        # Broadcast the received audio data to other clients
+                        encoded_data = data[data_key][user]
+                        await broadcast_audio(encoded_data, websocket, user)
                 case 'all_3d_data':
                     print('got_all_3d_request')
                     await websocket.send(json.dumps({data_key: graphical_obj}))
                     print('data sended')
-                    
-                case 'voice':
-                    print('it fucking works!')
 
                 case _:
                     if data_key in graphical_obj and graphical_obj[data_key]:
                         await websocket.send(json.dumps({data_key: graphical_obj[data_key]}))
-                        
+
                     else:
                         print(data_key, 'Object key not found!')
+
 
 async def main():
     try:
