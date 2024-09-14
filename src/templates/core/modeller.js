@@ -24,6 +24,8 @@ var all_3d_data = null;
 var isRecording = false;
 var audioContext;
 var audioProcessorNode;
+var audioContext;
+
 
 let lastSentTime = 0;
 const throttleTime = 10000; // milliseconds
@@ -357,12 +359,11 @@ class Warehouse{
 
       // echo from ws
       const receivedData = _WS.getReceivedData();
-      if (receivedData){
+      if (receivedData && receivedData instanceof String){
         var recivedDataJson = JSON.parse(receivedData)
         if (recivedDataJson["users_pos"]){
           this._LoadUserModel(recivedDataJson["users_pos"])
           users_pos = recivedDataJson["users_pos"]
-          _WS.receivedData = null;
         };
       };
 
@@ -381,15 +382,10 @@ class Warehouse{
 
   _Get3DObjects(){
     if (_WS.getState() == 1){
-
-      // echo from ws
-      const receivedData = _WS.getReceivedData();
-
-
-      if (receivedData){
-
+        // echo from ws
+        const receivedData = _WS.getReceivedData();
         var recivedDataJson = JSON.parse(receivedData)
-        if (recivedDataJson["all_3d_data"]){
+        if (recivedDataJson && recivedDataJson["all_3d_data"]){
           console.log(recivedDataJson["all_3d_data"]["line_state"])
           this._LoadEntity( recivedDataJson["all_3d_data"]["entity_state"] );
           this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
@@ -399,9 +395,8 @@ class Warehouse{
           //this._DrawArch( recivedDataJson["all_3d_data"]["arch_state"] );
           all_3d_data = recivedDataJson["all_3d_data"]
           _WS.receivedData = null;
-        };
-      };
     };
+};
 
   };
 
@@ -419,20 +414,25 @@ class Warehouse{
         // Initialize the AudioContext if not already done
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        } else {
+            audioContext.resume().then(() => {
+                    console.log("Suspend context");
+            });
+        };
 
         // Load the AudioWorkletProcessor if not already done
         if (!audioProcessorNode) {
-            await audioContext.audioWorklet.addModule('audio-processor.js');
+            await audioContext.audioWorklet.addModule('{{ url_for('static', filename='js/audio-processor.js') }}');
             audioProcessorNode = new AudioWorkletNode(audioContext, 'audio-processor');
-            
+
             // Listen for audio data from the processor
             audioProcessorNode.port.onmessage = (event) => {
                 const audioData = event.data;
-                const float32Array = new Float32Array(audioData);
-                const buffer = float32Array.buffer;
-                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': buffer}}));
-                ws.send(buffer);
+                const float32Array_data = new Float32Array(audioData);
+                const binary = String.fromCharCode(...new Uint8Array(float32Array_data.buffer));
+                const base64_data = btoa(binary)
+                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': btoa(binary)}}));
+                console.log(base64_data)
             };
         }
 
@@ -457,6 +457,57 @@ class Warehouse{
     }
   }
 
+  async _VoicePlay(){
+    
+    if (_WS.getState() == 1){
+
+      // echo from ws
+      const receivedData = _WS.getReceivedData();
+      const recivedDataJson = JSON.parse(receivedData)
+      if (recivedDataJson && recivedDataJson["voice"]){
+        for (const [user, base64Data] of Object.entries(recivedDataJson["voice"])) {
+
+            const binaryString = atob(base64Data);
+            // Create a Uint8Array to hold the binary data
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+
+            // Populate the Uint8Array with binary data
+            for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            // Convert Uint8Array to Float32Array (assuming that the original data was float32)
+            const float32Array = new Float32Array(bytes.buffer);
+
+            // Now `float32Array` contains the float32 audio data, you can use it in Web Audio API
+            console.log(float32Array);
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const sampleRate = audioContext.sampleRate;
+
+            // Create an empty stereo AudioBuffer with the same length as the array
+            const audioBuffer = audioContext.createBuffer(1, float32Array.length, sampleRate);
+
+            // Copy the Float32Array data into the buffer's first channel
+            audioBuffer.copyToChannel(float32Array, 0, 0);
+
+            // Create an AudioBufferSourceNode to play the buffer
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+
+            // Connect the source to the audio context's destination (speakers)
+            source.connect(audioContext.destination);
+
+            // Start playing the audio
+            source.start();
+
+        };
+      };
+    };
+  
+  };
+
   _RAF() {
     requestAnimationFrame(async () => {
       const now = Date.now();
@@ -465,7 +516,7 @@ class Warehouse{
         lastSentTime = now;
       }
       this._controls.update();
-
+      this._VoicePlay()
       this._Get3DObjects();
       
       
@@ -510,13 +561,11 @@ window.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', (event) => {
   if (event.code === 'Space' && !isRecording) { // Space key is pressed
     _APP._startMicrophoneCapture();
-    console.log('Start recording');
   }
 });
 
 document.addEventListener('keyup', (event) => {
   if (event.code === 'Space' && isRecording) { // Space key is released
     _APP._stopMicrophoneCapture();
-    console.log('Stop recording');
   }
 });

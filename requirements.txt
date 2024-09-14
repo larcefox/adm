@@ -5,6 +5,8 @@ asyncpg==0.29.0
 bcrypt==4.1.2
 black==24.2.0
 blinker==1.7.0
+certifi==2024.7.4
+charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
 contourpy==1.2.1
@@ -15,6 +17,7 @@ executing==2.0.1
 Flask==3.0.2
 Flask-Admin==1.6.1
 Flask-Bcrypt==1.0.1
+Flask-Cors==4.0.1
 Flask-Login==0.6.3
 Flask-Migrate==4.0.5
 Flask-SQLAlchemy==3.1.1
@@ -43,6 +46,7 @@ platformdirs==4.2.0
 psycopg2-binary==2.9.9
 pydantic==2.6.3
 pydantic_core==2.16.3
+pydub==0.25.1
 Pygments==2.17.2
 pyparsing==3.1.2
 PyQt5==5.15.11
@@ -51,12 +55,14 @@ PyQt5_sip==12.15.0
 python-dateutil==2.9.0.post0
 python-decouple==3.8
 python-dotenv==1.0.1
+requests==2.32.3
 ruff==0.3.4
 six==1.16.0
 sqlacodegen==3.0.0rc5
 SQLAlchemy==2.0.28
 tomli==2.0.1
 typing_extensions==4.10.0
+urllib3==2.2.2
 websockets==12.0
 Werkzeug==3.0.1
 WTForms==3.1.2
