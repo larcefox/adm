@@ -428,11 +428,11 @@ class Warehouse{
             // Listen for audio data from the processor
             audioProcessorNode.port.onmessage = (event) => {
                 const audioData = event.data;
-                const float32Array_data = new Float32Array(audioData);
-                const binary = String.fromCharCode(...new Uint8Array(float32Array_data.buffer));
-                const base64_data = btoa(binary)
-                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': btoa(binary)}}));
-                console.log(base64_data)
+                // const float32Array_data = new Float32Array(audioData);
+                // const binary = String.fromCharCode(...new Uint8Array(float32Array_data.buffer));
+                const base64_data = btoa(audioData)
+                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': base64_data}}));
+                console.log(audioData)
             };
         }
 
@@ -467,25 +467,13 @@ class Warehouse{
       if (recivedDataJson && recivedDataJson["voice"]){
         for (const [user, base64Data] of Object.entries(recivedDataJson["voice"])) {
 
-            const binaryString = atob(base64Data);
-            // Create a Uint8Array to hold the binary data
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-
-            // Populate the Uint8Array with binary data
-            for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-            }
-
-            // Convert Uint8Array to Float32Array (assuming that the original data was float32)
-            const float32Array = new Float32Array(bytes.buffer);
-
-            // Now `float32Array` contains the float32 audio data, you can use it in Web Audio API
-            console.log(float32Array);
+            const audioChunks = atob(base64Data);
+            const float32Array = Float32Array.from(audioChunks.split(","), parseFloat);
 
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const sampleRate = audioContext.sampleRate;
 
+            console.log(float32Array)
             // Create an empty stereo AudioBuffer with the same length as the array
             const audioBuffer = audioContext.createBuffer(1, float32Array.length, sampleRate);
 
@@ -501,7 +489,6 @@ class Warehouse{
 
             // Start playing the audio
             source.start();
-
         };
       };
     };
