@@ -349,25 +349,24 @@ class Warehouse{
     if (_WS.getState() == 1){
       // Send camera (user) position
       if (camera_position != JSON.stringify(this._camera.position)){
+        //console.log(camera_position, this._camera.position)
         _WS._sendMessage(JSON.stringify({'user_position': {'{{ user }}': {'position': this._camera.position, 'rotation': this._camera.rotation}}}));
         camera_position = JSON.stringify(this._camera.position)
-        console.log('send pos')
       };
+        // Send users state
+        _WS._sendMessage(JSON.stringify({'users_pos': {'{{ user }}': users_pos}}));
 
-      // Send users state
-      _WS._sendMessage(JSON.stringify({'users_pos': {'{{ user }}': users_pos}}));
+        // echo from ws
+        const receivedData = _WS.getReceivedData();
 
-      // echo from ws
-      const receivedData = _WS.getReceivedData();
-      if (receivedData && receivedData instanceof String){
         var recivedDataJson = JSON.parse(receivedData)
-        if (recivedDataJson["users_pos"]){
-          this._LoadUserModel(recivedDataJson["users_pos"])
-          users_pos = recivedDataJson["users_pos"]
+        if (recivedDataJson && 'users_pos' in recivedDataJson){
+            this._LoadUserModel(recivedDataJson["users_pos"])
+            users_pos = recivedDataJson["users_pos"]
         };
-      };
 
     }
+
   }
 
   _SendRequest3D(){
@@ -408,8 +407,19 @@ class Warehouse{
             return;
         }
 
+        const options = {
+          mimeType: 'audio/webm;codecs=opus', // High-quality codec for voice
+          audioBitsPerSecond: 256000 // Increase the bitrate (256 kbps)
+        };
+
         // Access the microphone
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
 
         // Initialize the AudioContext if not already done
         if (!audioContext) {
@@ -428,8 +438,6 @@ class Warehouse{
             // Listen for audio data from the processor
             audioProcessorNode.port.onmessage = (event) => {
                 const audioData = event.data;
-                // const float32Array_data = new Float32Array(audioData);
-                // const binary = String.fromCharCode(...new Uint8Array(float32Array_data.buffer));
                 const base64_data = btoa(audioData)
                 _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': base64_data}}));
                 console.log(audioData)
@@ -437,7 +445,7 @@ class Warehouse{
         }
 
         // Connect the audio nodes
-        const source = audioContext.createMediaStreamSource(stream);
+        const source = audioContext.createMediaStreamSource(stream, options);
         source.connect(audioProcessorNode);
 
         isRecording = true;
@@ -489,10 +497,11 @@ class Warehouse{
 
             // Start playing the audio
             source.start();
+            _WS.receivedData = null;
         };
       };
     };
-  
+
   };
 
   _RAF() {
