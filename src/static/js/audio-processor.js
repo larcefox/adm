@@ -2,7 +2,7 @@ class AudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.buffer = []; // Array to accumulate audio data
-    this.chunkSize = 4096; // Adjust chunk size to your desired value (e.g., 4096 samples)
+    this.chunkSize = 32768; // Adjust chunk size to your desired value (e.g., 4096 samples)
   }
 
   process(inputs, outputs, parameters) {
