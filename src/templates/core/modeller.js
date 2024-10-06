@@ -22,7 +22,6 @@ var all_3d_data = null;
 
 // Audio arrays
 var isRecording = false;
-var audioContext;
 var audioProcessorNode;
 var audioContext;
 
@@ -142,7 +141,7 @@ class Warehouse{
           
           var indices = Earcut.triangulate(vertices, [], 3);
           
-          geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 2 ) );
+          geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
           geometry.setIndex(indices);
           const material = new THREE[value.material_type](value.material);
           const mesh = new THREE.Mesh( geometry, material );
@@ -424,11 +423,14 @@ class Warehouse{
         // Initialize the AudioContext if not already done
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } else {
-            audioContext.resume().then(() => {
-                    console.log("Suspend context");
-            });
         };
+        // Рекомендация от Генри, удалить else
+        //else {
+            //audioContext.resume().then(() => {
+                    //console.log("Suspend context");
+            //});
+        //}
+
 
         // Load the AudioWorkletProcessor if not already done
         if (!audioProcessorNode) {

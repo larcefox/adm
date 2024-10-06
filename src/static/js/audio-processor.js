@@ -1,28 +1,127 @@
-class AudioProcessor extends AudioWorkletProcessor {
-  constructor() {
-    super();
-    this.buffer = []; // Array to accumulate audio data
-    this.chunkSize = 32768; // Adjust chunk size to your desired value (e.g., 4096 samples)
-  }
+import asyncio
+import websockets
+import hashlib
+import json
+from typing import Dict, Any
+from loguru import logger
+from lib.postgres_con import Database
 
-  process(inputs, outputs, parameters) {
-    // inputs[0][0] contains the audio data (first input channel)
-    if (inputs[0] && inputs[0][0]) {
-      const inputData = inputs[0][0];
+logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO", retention="10 days")
+users_position = {}
+connected_clients = set()
 
-      // Accumulate audio data in the buffer
-      this.buffer.push(...inputData);
+async def get_objects(obj) -> dict:
+    db = Database()
+    await db.connect()
+    query = f"""
+        SELECT data FROM world.{obj} WHERE data ?|
+            array(SELECT ARRAY (SELECT key FROM  world.{obj}, lateral jsonb_each_text(data) WHERE key LIKE '{obj}%'))
+        ;
+        """
+    db_data = await db.execute_query(query)
+    await db.disconnect()
 
-      // If the buffer reaches the chunk size, send the data to the main thread
-      if (this.buffer.length >= this.chunkSize) {
-        const chunk = this.buffer.slice(0, this.chunkSize);
-        this.port.postMessage(chunk); // Send the chunk to the main thread
-        this.buffer = this.buffer.slice(this.chunkSize); // Remove the sent chunk from the buffer
-      }
+    dict_data = {}
+    if db_data:
+        for row in db_data:
+            dict_data.update(json.loads(dict(row)['data']))
+    return dict_data
+
+async def get_graphical_obj():
+    graphical_obj = {
+        'entity_state': await get_objects('shape'),
+        'light_state': await get_objects('light'),
+        'line_state': await get_objects('line'),
+        'figure_state': await get_objects('figure'),
+        'model_state': await get_objects('model'),
+        'arch_state': await get_objects('arch')
     }
+    return graphical_obj
 
-    return true; // Keep the processor running
-  }
-}
+graphical_obj = asyncio.run(get_graphical_obj())
 
-registerProcessor('audio-processor', AudioProcessor);
+async def broadcast_audio(data, sender, user):
+    if connected_clients:
+        disconnected_clients = []
+        for client in connected_clients:
+            if client != sender:
+                try:
+                    await client.send(json.dumps({'voice': {user: data}}))
+                except websockets.ConnectionClosedOK:
+                    print(f"Client {client.remote_address} disconnected.")
+                    disconnected_clients.append(client)
+                except Exception as e:
+                    print(f"Error sending audio data: {e}")
+                    disconnected_clients.append(client)
+
+        for client in disconnected_clients:
+            connected_clients.remove(client)
+
+async def echo_messages(websocket, path):
+    connected_clients.add(websocket)
+    print(f"Client connected: {websocket.remote_address}")
+
+    try:
+        while True:
+            try:
+                data = await websocket.recv()
+                data = json.loads(data)
+            except websockets.ConnectionClosedOK:
+                print(f"Client {websocket.remote_address} disconnected.")
+                break
+            except Exception as e:
+                print(f"Error processing message from client: {e}")
+                continue
+
+            for data_key in data:
+                match data_key:
+                    case 'user_position':
+                        users_position.update(data[data_key])
+                    case 'users_pos':
+                        for user in data[data_key]:
+                            other_users = {i:users_position[i] for i in users_position if i!=user}
+                            current_hash = dict_hash(other_users)
+                            user_hash = dict_hash(data[data_key][user])
+                            if current_hash != user_hash:
+                                await websocket.send(json.dumps({'users_pos': other_users}))
+
+                    case 'voice':
+                        for user in data[data_key]:
+                            encoded_data = data[data_key][user]
+                            await broadcast_audio(encoded_data, websocket, user)
+
+                    case 'all_3d_data':
+                        print('got_all_3d_request')
+                        await websocket.send(json.dumps({data_key: graphical_obj}))
+                        print('data sent')
+
+                    case _:
+                        if data_key in graphical_obj and graphical_obj[data_key]:
+                            await websocket.send(json.dumps({data_key: graphical_obj[data_key]}))
+                        else:
+                            print(data_key, 'Object key not found!')
+
+    finally:
+        connected_clients.remove(websocket)
+
+async def main():
+    try:
+        logger.info("Trying to use port and host")
+        async with websockets.serve(echo_messages, "127.0.0.1", 8765):
+            await asyncio.Future()
+    except OSError as e:
+        logger.info(f"WebSocket error, may be already started: {e}")
+
+def dict_hash(dictionary: Dict[str, Any]) -> str:
+    """MD5 hash of a dictionary."""
+    dhash = hashlib.md5()
+    encoded = json.dumps(dictionary, sort_keys=True).encode()
+    dhash.update(encoded)
+    return dhash.hexdigest()
+
+def run_websocket():
+    logger.info("Starting thread")
+    asyncio.run(main())
+
+if __name__ == "__main__":
+    run_websocket()
