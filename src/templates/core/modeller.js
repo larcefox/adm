@@ -423,14 +423,11 @@ class Warehouse{
         // Initialize the AudioContext if not already done
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } else {
+            audioContext.resume().then(() => {
+                    console.log("Suspend context");
+            });
         };
-        // Рекомендация от Генри, удалить else
-        //else {
-            //audioContext.resume().then(() => {
-                    //console.log("Suspend context");
-            //});
-        //}
-
 
         // Load the AudioWorkletProcessor if not already done
         if (!audioProcessorNode) {
