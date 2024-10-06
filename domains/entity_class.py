@@ -39,10 +39,10 @@ class Entity_manager():
         for i in self.light_list: del i
         self.light_list.clear()
         
-        for i in self.light_list: del i
+        for i in self.line_list: del i
         self.line_list.clear()
         
-        for i in self.light_list: del i
+        for i in self.figure_list: del i
         self.figure_list.clear()
 
     def get_entity_list(self, entity_type):
