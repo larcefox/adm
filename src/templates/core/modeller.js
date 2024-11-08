@@ -83,12 +83,12 @@ class Warehouse{
 
     const loader = new THREE.CubeTextureLoader();
     const textur = loader.load([
-        '{{ url_for('static', filename='textures/skybox/posx.png') }}',
-        '{{ url_for('static', filename='textures/skybox/negx.png') }}',
-        '{{ url_for('static', filename='textures/skybox/posy.png') }}',
-        '{{ url_for('static', filename='textures/skybox/negy.png') }}',
-        '{{ url_for('static', filename='textures/skybox/posz.png') }}',
-        '{{ url_for('static', filename='textures/skybox/negz.png') }}'
+        '{{ url_for('static', filename='textures/skybox/posx.jpg') }}',
+        '{{ url_for('static', filename='textures/skybox/negx.jpg') }}',
+        '{{ url_for('static', filename='textures/skybox/posy.jpg') }}',
+        '{{ url_for('static', filename='textures/skybox/negy.jpg') }}',
+        '{{ url_for('static', filename='textures/skybox/posz.jpg') }}',
+        '{{ url_for('static', filename='textures/skybox/negz.jpg') }}'
     ]);
 
     this._scene.background = textur;
