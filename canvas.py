@@ -30,7 +30,7 @@ def send_data():
             rotation={'x': -(math.pi/2),'y': 0, 'z': -(math.pi/2)}
             )
     
-    model = mf.create('model_obj', path='cat//scene.gltf')
+    model = mf.create('model_obj', path='noodle//scene.gltf')
     
     # box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
     map = ef.create('figure', vertices=terrain)
