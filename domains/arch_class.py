@@ -36,9 +36,9 @@ class Arch(abc.ABC, ArchManager):
         pass
 
     def get_name(self, arch_type):
-        arch_number = self.manager.get_arch_list(arch_type).index(self)
+        arch_number = hash(self)
         if arch_type == 'arch':
-            return ''.join(('Arch', str(arch_number)))
+            return ''.join(('arch', str(arch_number)))
         else:
             return 'NaN'
 

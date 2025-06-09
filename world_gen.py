@@ -21,22 +21,22 @@ def send_data():
         # directional_light = ef.create('light')
         # ambient_light = ef.create('light', light_type='AmbientLight')
 
-    # example entity
+        # example entity
 
-#     plane = ef.create(
-#             'plane',
-#             630, 
-#             630,
-#             texture='textures/map.svg',
-#             color=0xffffff,
-#             position={'x':0, 'y': 0, 'z': 0},
-#             rotation={'x': -(math.pi/2),'y': 0, 'z': -(math.pi/2)}
-#             )
+        # plane = ef.create(
+        #         'plane',
+        #         630, 
+        #         630,
+        #         texture='textures/map.svg',
+        #         color=0xffffff,
+        #         position={'x':0, 'y': 0, 'z': 0},
+        #         rotation={'x': -(math.pi/2),'y': 0, 'z': -(math.pi/2)}
+        #         )
     
-        # model = mf.create('model_obj', path='cat//scene.gltf')
+        model = mf.create('model_obj', path='coffee_shop/scene.glb')
         # box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
         # map = ef.create('figure', vertices=terrain)
-        # cube = af.create('cube', side_length=10)
+        # cube = af.create('cube', side_length=100)
         # wall = af.create('k_wall')
         # sphere = ef.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
 
@@ -52,27 +52,26 @@ def send_data():
         #                 )
 
 
-        for x in list(range(-9, 10)):
-                for y in list(range(-9, 10)):
-                        ef.create(
-                                'box', 1, 1, 2, 
-                                position={
-                                'x': random.random() + x * 4, 
-                                'y': random.random() * 4 + 2, 
-                                'z': random.random() + y * 5
-                                }, 
-                                color=0x80807f)
+        # for x in list(range(11, 25)):
+        #         for y in list(range(11, 25)):
+        #                 ef.create(
+        #                         'box', 1, 1, 2, 
+        #                         position={
+        #                         'x': random.random() + x * 4, 
+        #                         'y': random.random() * 4 + 2, 
+        #                         'z': random.random() + y * 5
+        #                         }, 
+        #                         color=0x80807f)
 
-    # Coordinates test
-    # line_test = ef.create(
-            # 'line', 
-            # position1 = {'x': 10, 'y': 10, 'z': 10},
-            # position2 = {'x': 0, 'y': 0, 'z': 0},
-            # color='red')
+        # # Coordinates test
+        # line_test = ef.create(
+        #         'line', 
+        #         position1 = {'x': 30, 'y': 10, 'z': 10},
+        #         position2 = {'x': 0, 'y': 0, 'z': 0},
+        #         color='red')
 
 
         # TODO rewrite for loop creation
-        camera = ef.create('camera')
         lights = {
                 light.name:
                 light.return_dict() for light in Entity.manager.get_entity_list('light')
@@ -99,13 +98,12 @@ def send_data():
                 }
 
         return {
-                'camera': json.dumps(camera.return_dict()), 
-                'lights': json.dumps(lights),
-                'shape': json.dumps(shapes),
-                'line': json.dumps(lines),
-                'figure': json.dumps(figures),
-                'model': json.dumps(models),
-                'arch': json.dumps(arch)
+                'light': lights,
+                'shape': shapes,
+                'line': lines,
+                'figure': figures,
+                'model': models,
+                'arch': arch
                 }
     
 async def main():
@@ -124,14 +122,14 @@ async def main():
         #print(data)
         
         for element in elements:
-                if elements[element] != '{}':
-                        json_data = elements[element]
-                        print(json_data)
-                        query = f"INSERT INTO world.entity (data, user_id) VALUES ('{json_data}', '34c1d67a-7f54-4a47-a503-84979ba8ac7f')"
-                        print(query)
-                        data = await db.execute_query(query)
-                        print(data)
-                        
+                if elements[element]:
+                        for pice in elements[element]:
+                                pice_json = json.dumps({pice: elements[element][pice]})
+                                query = f"INSERT INTO world.{element} (data, user_id) VALUES ('{pice_json}', '34c1d67a-7f54-4a47-a503-84979ba8ac7f')"
+                                print(query)
+                                data = await db.execute_query(query)
+                                print(data)
+      
         # Disconnect from the database
         await db.disconnect()
 
