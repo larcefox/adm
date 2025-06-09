@@ -38,7 +38,6 @@ async def get_graphical_obj():
         'model_state': await get_objects('model'),
         'arch_state': await get_objects('arch')
     }
-    print(graphical_obj.keys())
     return graphical_obj
 
 
@@ -99,7 +98,8 @@ async def echo_messages(websocket, path):
                     case 'all_3d_data':
                         print('got_all_3d_request')
                         await websocket.send(json.dumps({data_key: graphical_obj}))
-                        print('data sent')
+
+                        print(f'data sended')
 
                     case _:
                         if data_key in graphical_obj and graphical_obj[data_key]:

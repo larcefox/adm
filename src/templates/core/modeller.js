@@ -312,12 +312,9 @@ class Warehouse{
                   new THREE[value.material_type]
                 ({ map: new THREE.TextureLoader().load('{{ url_for('static', filename='textures/blueprint.jpg') }}'),
                 side: THREE.DoubleSide,
-                //encoding: THREE.sRGBEncoding,
                 transparent: true,
                 opacity: 0.8,
-                //color: 0x004F00
-                }); // put it to python platform_class
-              
+                });
           }else{
               material = new THREE[value.material_type](value.material);
           }
@@ -329,11 +326,17 @@ class Warehouse{
           mesh.receiveShadow = value.receiveShadow
           this._scene.add(mesh);
 
-            //add mesh position
+          //add mesh position
           mesh.position.set(...Object.values(value.position));
 
-            //add mesh rotation
-          mesh.rotation.set(...Object.values(value.rotation));
+          //add mesh rotation
+          if (value.geometry_type === 'PlaneGeometry') {
+            // Домножаем x на -Math.PI/2 для горизонтального положения лицом вверх
+            const rx = (value.rotation?.x || 0) - Math.PI / 2;
+            mesh.rotation.set(rx, value.rotation?.y || 0, value.rotation?.z || 0);
+          } else {
+            mesh.rotation.set(...Object.values(value.rotation));
+          }
       };
   };
 
@@ -382,6 +385,7 @@ class Warehouse{
     if (_WS.getState() == 1){
         // echo from ws
         const receivedData = _WS.getReceivedData();
+        console.log(receivedData)
         var recivedDataJson = JSON.parse(receivedData)
         if (recivedDataJson && recivedDataJson["all_3d_data"]){
           console.log(recivedDataJson["all_3d_data"]["line_state"])
