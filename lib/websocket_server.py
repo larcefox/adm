@@ -38,6 +38,7 @@ async def get_graphical_obj():
         'model_state': await get_objects('model'),
         'arch_state': await get_objects('arch')
     }
+    print(graphical_obj.keys())
     return graphical_obj
 
 
