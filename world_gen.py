@@ -20,31 +20,29 @@ def send_data():
 
         model = mf.create('model_obj', path='coffee_shop/scene.glb')
 
-        # Создание основания парка (зелёная плоскость)
-        park_ground = ef.create('plane', 1000, 1000, position={'x': 0, 'y': 0, 'z': 0}, color='green')
+        # Основание башни
+        base = ef.create('cylinder',
+                         radiusTop=5, radiusBottom=10, height=10,
+                         position={'x': 0, 'y': 5, 'z': 0},
+                         color=0x888888)
 
-        # Эйфелева башня
-        # Нижняя часть
-        base = ef.create('box', 20, 2, 20, position={'x': 0, 'y': 1, 'z': 0}, color='darkgrey')
+        # Средняя секция
+        middle = ef.create('cylinder',
+                           radiusTop=3, radiusBottom=5, height=30,
+                           position={'x': 0, 'y': 25, 'z': 0},
+                           color=0x999999)
 
-        # Четыре ноги башни
-        for pos in [(-8, -8), (8, -8), (-8, 8), (8, 8)]:
-                leg = ef.create('cylinder', radiusTop=0.5, radiusBottom=2, height=30,
-                                position={'x': pos[0], 'y': 15, 'z': pos[1]}, color='grey')
+        # Верхняя секция
+        top = ef.create('cylinder',
+                        radiusTop=1, radiusBottom=3, height=20,
+                        position={'x': 0, 'y': 50, 'z': 0},
+                        color=0xaaaaaa)
 
-        # Центральная платформа
-        platform = ef.create('box', 10, 1, 10, position={'x': 0, 'y': 30, 'z': 0}, color='darkgrey')
-
-        # Средняя часть
-        middle = ef.create('cylinder', radiusTop=1, radiusBottom=2, height=20,
-                           position={'x': 0, 'y': 40, 'z': 0}, color='grey')
-
-        # Верхняя платформа
-        top_platform = ef.create('box', 5, 1, 5, position={'x': 0, 'y': 50, 'z': 0}, color='darkgrey')
-
-        # Верхняя часть
-        spire = ef.create('cylinder', radiusTop=0.1, radiusBottom=1, height=20,
-                          position={'x': 0, 'y': 60, 'z': 0}, color='grey')
+        # Антенна
+        antenna = ef.create('cone',
+                            radius=1, height=10,
+                            position={'x': 0, 'y': 65, 'z': 0},
+                            color=0xff0000)
 
         lights = {
                 light.name:
