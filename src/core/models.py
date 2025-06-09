@@ -1,7 +1,7 @@
 from datetime import datetime
 from src import bcrypt, db
 import uuid
-import libs.load_env as lib_env
+import lib.load_env as lib_env
 from loguru import logger
 from flask_login import UserMixin
 from src.accounts.models import User
