@@ -18,60 +18,32 @@ terrain = noise_map.map_gen()
 
 def send_data():
 
-        # directional_light = ef.create('light')
-        # ambient_light = ef.create('light', light_type='AmbientLight')
-
-        # example entity
-
-        # plane = ef.create(
-        #         'plane',
-        #         630, 
-        #         630,
-        #         texture='textures/map.svg',
-        #         color=0xffffff,
-        #         position={'x':0, 'y': 0, 'z': 0},
-        #         rotation={'x': -(math.pi/2),'y': 0, 'z': -(math.pi/2)}
-        #         )
-    
         model = mf.create('model_obj', path='coffee_shop/scene.glb')
-        # box = ef.create('box', 10, 10, 10, position={'x': 0, 'y': 10, 'z': 0}, color='red')
-        # map = ef.create('figure', vertices=terrain)
-        # cube = af.create('cube', side_length=100)
-        # wall = af.create('k_wall')
-        # sphere = ef.create('sphere', 5, 15, 15, position={'x': 0, 'y': 23, 'z': 0}, color='green')
 
-        # for i in list(range(1, 2)):
-        #         ef.create(
-        #                 'box', 
-        #                 width=1,
-        #                 height=1, 
-        #                 depth=1, 
-        #                 position={'x': -25 + i, 'y': 10, 'z': 0}, 
-        #                 rotation={'x': i/10, 'y': 0, 'z': 0}, 
-        #                 color=0xff0000
-        #                 )
+        # Создание основания парка (зелёная плоскость)
+        park_ground = ef.create('plane', 1000, 1000, position={'x': 0, 'y': 0, 'z': 0}, color='green')
 
+        # Создание дорожек (светло-серые)
+        for i in range(-500, 501, 100):
+                ef.create('plane', 1000, 10, position={'x': 0, 'y': 0.01, 'z': i}, color='lightgrey')
+                ef.create('plane', 10, 1000, position={'x': i, 'y': 0.01, 'z': 0}, color='lightgrey')
 
-        # for x in list(range(11, 25)):
-        #         for y in list(range(11, 25)):
-        #                 ef.create(
-        #                         'box', 1, 1, 2, 
-        #                         position={
-        #                         'x': random.random() + x * 4, 
-        #                         'y': random.random() * 4 + 2, 
-        #                         'z': random.random() + y * 5
-        #                         }, 
-        #                         color=0x80807f)
+        # Создание деревьев
+        for _ in range(200):
+                x_pos = random.uniform(-500, 500)
+                z_pos = random.uniform(-500, 500)
+                tree_trunk = ef.create('cylinder', radiusTop=0.5, radiusBottom=0.5, height=5,
+                                       position={'x': x_pos, 'y': 2.5, 'z': z_pos}, color='brown')
+                tree_foliage = ef.create('sphere', radius=2, widthSegments=8, heightSegments=8,
+                                         position={'x': x_pos, 'y': 7, 'z': z_pos}, color='darkgreen')
 
-        # # Coordinates test
-        # line_test = ef.create(
-        #         'line', 
-        #         position1 = {'x': 30, 'y': 10, 'z': 10},
-        #         position2 = {'x': 0, 'y': 0, 'z': 0},
-        #         color='red')
+        # Создание кустов
+        for _ in range(300):
+                x_pos = random.uniform(-500, 500)
+                z_pos = random.uniform(-500, 500)
+                bush = ef.create('sphere', radius=1.2, widthSegments=6, heightSegments=6,
+                                 position={'x': x_pos, 'y': 1.2, 'z': z_pos}, color='forestgreen')
 
-
-        # TODO rewrite for loop creation
         lights = {
                 light.name:
                 light.return_dict() for light in Entity.manager.get_entity_list('light')
@@ -125,7 +97,8 @@ async def main():
                 if elements[element]:
                         for pice in elements[element]:
                                 pice_json = json.dumps({pice: elements[element][pice]})
-                                query = f"INSERT INTO world.{element} (data, user_id) VALUES ('{pice_json}', '34c1d67a-7f54-4a47-a503-84979ba8ac7f')"
+                                # нужно указать пользователя
+                                query = f"INSERT INTO world.{element} (data, user_id) VALUES ('{pice_json}', 'b51d9b79-9d12-4dd8-9acc-98db5a481953')"
                                 print(query)
                                 data = await db.execute_query(query)
                                 print(data)

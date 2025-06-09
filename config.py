@@ -29,7 +29,7 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = (
-        "postgresql+psycopg2://postgres:postgres@192.168.31.6:5432/3db"
+        "postgresql+psycopg2://mvp_user:mvp_pass@localhost:5432/3db"
     )
     BCRYPT_LOG_ROUNDS = 1
     WTF_CSRF_ENABLED = False
