@@ -5,47 +5,67 @@ import asyncio
 
 
 def geojson_to_entities(geojson_path, height=10, color=0x00ff00):
-    """
-    Преобразует GeoJSON-файл в список 3D-сущностей (Line или Figure).
-
-    :param geojson_path: путь к .geojson файлу
-    :param height: высота объектов (для Polygon)
-    :param color: цвет линий или полигонов
-    :return: список Entity объектов
-    """
     with open(geojson_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     features = data.get('features', [])
     entities = []
 
+    if not features:
+        return entities
+
     for feature in features:
         geometry = feature.get('geometry', {})
         geom_type = geometry.get('type')
         coords = geometry.get('coordinates', [])
 
-        # Убираем вложенность, если она есть
-        if geom_type in ['Polygon', 'MultiLineString']:
-            coords = coords[0]
-
-        if geom_type in ['LineString', 'MultiLineString']:
+        if geom_type == 'LineString':
             for i in range(len(coords) - 1):
-                p1 = {'x': coords[i][0], 'y': 0, 'z': coords[i][1]}
-                p2 = {'x': coords[i + 1][0], 'y': 0, 'z': coords[i + 1][1]}
+                x1, z1 = coords[i]
+                x2, z2 = coords[i + 1]
+                p1 = {'x': x1, 'y': 0, 'z': z1}
+                p2 = {'x': x2, 'y': 0, 'z': z2}
                 line = Line(position1=p1, position2=p2, color=color)
                 entities.append(line)
 
-        elif geom_type in ['Polygon', 'MultiPolygon']:
+        elif geom_type == 'MultiLineString':
+            for line_coords in coords:
+                for i in range(len(line_coords) - 1):
+                    x1, z1 = line_coords[i]
+                    x2, z2 = line_coords[i + 1]
+                    p1 = {'x': x1, 'y': 0, 'z': z1}
+                    p2 = {'x': x2, 'y': 0, 'z': z2}
+                    line = Line(position1=p1, position2=p2, color=color)
+                    entities.append(line)
+
+        elif geom_type == 'Polygon':
+            exterior_ring = coords[0]  # только внешний контур
             vertices = []
             triangls = []
-            for i, coord in enumerate(coords):
-                vertices.append([coord[0], 0, coord[1]])
+            for i, coord in enumerate(exterior_ring):
+                x, z = coord
+                vertices.append([x, 0, z])
                 if i >= 2:
                     triangls.append([0, i - 1, i])
-            vertices_flat = [v for sublist in vertices for v in sublist]
+            vertices_flat = [v for triplet in vertices for v in triplet]
             triangls_flat = [i for tri in triangls for i in tri]
             fig = Figure(vertices=vertices_flat, triangls=triangls_flat, color=color)
             entities.append(fig)
+
+        elif geom_type == 'MultiPolygon':
+            for polygon in coords:
+                exterior_ring = polygon[0]
+                vertices = []
+                triangls = []
+                for i, coord in enumerate(exterior_ring):
+                    x, z = coord
+                    vertices.append([x, 0, z])
+                    if i >= 2:
+                        triangls.append([0, i - 1, i])
+                vertices_flat = [v for triplet in vertices for v in triplet]
+                triangls_flat = [i for tri in triangls for i in tri]
+                fig = Figure(vertices=vertices_flat, triangls=triangls_flat, color=color)
+                entities.append(fig)
 
         elif geom_type == 'Point':
             x, z = coords
@@ -70,7 +90,6 @@ async def insert_entities_to_db(entities, user_id='c55f8791-65f9-4a29-8f46-bc5e6
     await db.connect()
 
     for entity in entities:
-        # entity_type = entity.__class__.__name__.lower()  # e.g., 'line', 'figure', 'box'
         if hasattr(entity, 'return_dict'):
             payload = json.dumps({entity.name: entity.return_dict()})
             query = f"INSERT INTO world.shape (data, user_id) VALUES ('{payload}', '{user_id}')"

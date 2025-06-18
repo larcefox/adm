@@ -38,6 +38,11 @@ class Database:
             print(f"An error occurred while executing the query: {e}")
             return None
 
+    async def listen_channel(self, channel_name, callback):
+        if self.connection is None:
+            await self.connect()
+        await self.connection.add_listener(channel_name, lambda *args: callback(args[2]))
+
     async def execute_query_single(self, query, *args):
         """Execute a raw SQL query and return a single row."""
         try:

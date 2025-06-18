@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import asyncpg
 import hashlib
 import json
 from typing import Dict, Any
@@ -9,10 +10,30 @@ from lib.postgres_con import Database
 logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO", retention="10 days")
 users_position = {}
 connected_clients = set()
+db = Database()
+
+async def notify_listener():
+    await db.connect()
+
+    async def callback(connection, pid, channel, payload):
+        print(f"[DB NOTIFY] {channel} -> {payload}")
+        for ws in connected_clients.copy():
+            try:
+                await ws.send(payload)
+            except Exception as e:
+                print(f"Error sending to client: {e}")
+                connected_clients.remove(ws)
+
+    await db.connection.add_listener("shape_channel", callback)
+    await db.connection.add_listener("model_channel", callback)
+    await db.connection.add_listener("arch_channel", callback)
+
+    print("Listening to DB channels...")
+    while True:
+        await asyncio.sleep(1)  # Keep the task alive
 
 
 async def get_objects(obj) -> dict:
-    db = Database()
     await db.connect()
     query = f"""
         SELECT data FROM world.{obj} WHERE data ?| 
@@ -39,10 +60,6 @@ async def get_graphical_obj():
         'arch_state': await get_objects('arch')
     }
     return graphical_obj
-
-
-graphical_obj = asyncio.run(get_graphical_obj())
-
 
 async def broadcast_audio(data, sender, user):
     if connected_clients:
@@ -97,6 +114,7 @@ async def echo_messages(websocket, path):
 
                     case 'all_3d_data':
                         print('got_all_3d_request')
+                        graphical_obj = await get_graphical_obj()
                         await websocket.send(json.dumps({data_key: graphical_obj}))
 
                         print(f'data sended')
@@ -113,11 +131,14 @@ async def echo_messages(websocket, path):
 
 async def main():
     try:
-        logger.info("Trying to use port and host")
-        async with websockets.serve(echo_messages, "127.0.0.1", 8765):
-            await asyncio.Future()
+        logger.info("Starting WebSocket server and DB listener")
+        server = websockets.serve(echo_messages, "127.0.0.1", 8765)
+        await asyncio.gather(
+            server,
+            notify_listener()
+        )
     except OSError as e:
-        logger.info(f"WebSocket error, may be already started: {e}")
+        logger.error(f"WebSocket error, may be already started: {e}")
 
 
 def dict_hash(dictionary: Dict[str, Any]) -> str:

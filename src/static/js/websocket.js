@@ -45,6 +45,7 @@ class WS {
 
     // Method to access the received data
     getReceivedData() {
+        console.log(this.receivedData);
         return this.receivedData;
     }
 

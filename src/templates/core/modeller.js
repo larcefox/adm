@@ -81,18 +81,25 @@ class Warehouse{
     // this._controls.maxPolarAngle = Math.PI / 2; // limit vertical rotation to 90 degrees
     // this._controls.minPolarAngle = Math.PI / 2; // restrict to horizontal plane (optional)
 
-    const loader = new THREE.CubeTextureLoader();
-    const textur = loader.load([
-        '{{ url_for('static', filename='textures/skybox/posx.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negx.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/posy.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negy.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/posz.jpg') }}',
-        '{{ url_for('static', filename='textures/skybox/negz.jpg') }}'
-    ]);
+//    const loader = new THREE.CubeTextureLoader();
+//    const textur = loader.load([
+//        '{{ url_for('static', filename='textures/skybox/posx.jpg') }}',
+//        '{{ url_for('static', filename='textures/skybox/negx.jpg') }}',
+//        '{{ url_for('static', filename='textures/skybox/posy.jpg') }}',
+//        '{{ url_for('static', filename='textures/skybox/negy.jpg') }}',
+//        '{{ url_for('static', filename='textures/skybox/posz.jpg') }}',
+//        '{{ url_for('static', filename='textures/skybox/negz.jpg') }}'
+//    ]);
+    //this._scene.background = texture;
+    const loader = new THREE.TextureLoader();
+      const texture = loader.load(
+        '{{ url_for('static', filename='textures/skybox/canvas.jpg') }}',
+        () => {
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          texture.colorSpace = THREE.SRGBColorSpace;
+          this._scene.background = texture;
+        });
 
-    this._scene.background = textur;
-    
     //this._LoadLight( {{ light }} );
     // // this._LoadModel( {{ model }} );
     // this._DrawEdges( {{ line }} );
@@ -208,10 +215,10 @@ class Warehouse{
         model_loader.load(
           './static/3d_models/cat/scene.gltf'
             , (gltf) => {
-        gltf.scene.traverse(c => {
-          c.castShadow = true;
-          c.receiveShadow = true;
-          c.name = name;
+            gltf.scene.traverse(c => {
+                c.castShadow = true;
+                c.receiveShadow = true;
+                c.name = name;
         });
         gltf.scene.position.set(...Object.values(coordinates.position));
         gltf.scene.rotation.set(...Object.values(coordinates.rotation));
@@ -230,9 +237,9 @@ class Warehouse{
         value.path
         , (gltf) => {
         gltf.scene.traverse(c => {
-        // c.castShadow = true;
-        // c.receiveShadow = true;
-        //c.name = "model";
+//         c.castShadow = true;
+//         c.receiveShadow = true;
+//         c.name = "model";
         });
         gltf.scene.position.set(...Object.values(value.position));
         gltf.scene.rotation.set(...Object.values(value.rotation));
@@ -241,9 +248,18 @@ class Warehouse{
         if (value['positional_audio']){
           const _PositionalRadio = new PositionalRadio(THREE, gltf.scene, value['positional_audio'], this._listener);
         }
+       this._scene.add(gltf.scene);
+      },
+        // called while loading is progressing
+        function ( xhr ) {
 
-        this._scene.add(gltf.scene);
-      });
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+        },
+        // called when loading has errors
+        function ( error ) {
+            console.error(error);
+        });
     };
   };
 
