@@ -11,26 +11,34 @@ logger.add('./logs/manage.log', format="{time} {level} {message}", level="INFO",
 users_position = {}
 connected_clients = set()
 db = Database()
+notify_db = Database()
 
 async def notify_listener():
-    await db.connect()
+    print("notify_listener started")  # Debug: function entry
+    try:
+        await notify_db.connect()
+        print("DB connected")
+        async def callback(connection, pid, channel, payload):
+            print(f"[DB NOTIFY] {channel} -> {payload}")
+            for ws in connected_clients.copy():
+                try:
+                    print('Notify sended to client')
+                    payload = json.loads(payload)
+                    await ws.send(json.dumps({channel: payload}))
+                except Exception as e:
+                    print(f"Error sending to client: {e}")
+                    connected_clients.remove(ws)
 
-    async def callback(connection, pid, channel, payload):
-        print(f"[DB NOTIFY] {channel} -> {payload}")
-        for ws in connected_clients.copy():
-            try:
-                await ws.send(payload)
-            except Exception as e:
-                print(f"Error sending to client: {e}")
-                connected_clients.remove(ws)
+        await notify_db.connection.add_listener("shape_channel", callback)
+        print("Listener added to shape_channel")
+        await notify_db.connection.add_listener("model_channel", callback)
+        await notify_db.connection.add_listener("arch_channel", callback)
 
-    await db.connection.add_listener("shape_channel", callback)
-    await db.connection.add_listener("model_channel", callback)
-    await db.connection.add_listener("arch_channel", callback)
-
-    print("Listening to DB channels...")
-    while True:
-        await asyncio.sleep(1)  # Keep the task alive
+        print("Listening to DB channels...")
+        while True:
+            await asyncio.sleep(1)
+    except Exception as e:
+        print(f"Exception in notify_listener: {e}")
 
 
 async def get_objects(obj) -> dict:
@@ -132,10 +140,10 @@ async def echo_messages(websocket, path):
 async def main():
     try:
         logger.info("Starting WebSocket server and DB listener")
-        server = websockets.serve(echo_messages, "127.0.0.1", 8765)
+        server = await websockets.serve(echo_messages, "127.0.0.1", 8765)
         await asyncio.gather(
-            server,
-            notify_listener()
+            notify_listener(),
+            server.wait_closed()
         )
     except OSError as e:
         logger.error(f"WebSocket error, may be already started: {e}")

@@ -401,9 +401,10 @@ class Warehouse{
     if (_WS.getState() == 1){
         // echo from ws
         const receivedData = _WS.getReceivedData();
-        console.log(receivedData)
+        // console.log(receivedData)
         var recivedDataJson = JSON.parse(receivedData)
-        if (recivedDataJson && recivedDataJson["all_3d_data"]){
+        if (recivedDataJson && recivedDataJson["all_3d_data"])
+        {
           console.log(recivedDataJson["all_3d_data"]["line_state"])
           this._LoadEntity( recivedDataJson["all_3d_data"]["entity_state"] );
           this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
@@ -413,7 +414,19 @@ class Warehouse{
           //this._DrawArch( recivedDataJson["all_3d_data"]["arch_state"] );
           all_3d_data = recivedDataJson["all_3d_data"]
           _WS.receivedData = null;
-    };
+        };
+        if (recivedDataJson && recivedDataJson["shape_channel"]) {
+            const shapeData = recivedDataJson["shape_channel"]["data"];
+            for (const key in shapeData) {
+                const existing = this._scene.getObjectByName(key);
+                if (existing) {
+                    this._scene.remove(existing);
+                }
+            }
+
+            this._LoadEntity(shapeData);
+            _WS.receivedData = null;
+        }
 };
 
   };
