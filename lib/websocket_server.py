@@ -107,6 +107,7 @@ async def echo_messages(websocket, path):
                 match data_key:
                     case 'user_position':
                         users_position.update(data[data_key])
+                        print(data[data_key])
                     case 'users_pos':
                         for user in data[data_key]:
                             other_users = {i: users_position[i] for i in users_position if i != user}

@@ -93,7 +93,7 @@ class Warehouse{
     //this._scene.background = texture;
     const loader = new THREE.TextureLoader();
       const texture = loader.load(
-        '{{ url_for('static', filename='textures/skybox/canvas.jpg') }}',
+        '{{ url_for('static', filename='textures/skybox/canvas_v2.jpg') }}',
         () => {
           texture.mapping = THREE.EquirectangularReflectionMapping;
           texture.colorSpace = THREE.SRGBColorSpace;

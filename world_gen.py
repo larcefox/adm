@@ -5,6 +5,7 @@ from domains.entity_class import Entity_fabric as ef
 from domains.entity_class import Entity, Light, AmbientLight
 from domains.model_class import ModelFabric as mf
 from domains.model_class import Model
+from domains.planet_postion_class import PlanetDataFetcher
 from domains.arch_class import ArchFabric as af
 from domains.arch_class import Arch
 from lib.pnoise_map import MapGen
@@ -17,17 +18,20 @@ noise_map = MapGen()
 terrain = noise_map.map_gen()
 
 def send_data():
-    # Пример 3D модели
-    model = mf.create('model_obj', path='coffee_shop/scene.glb', position={'x':50, 'y': 0, 'z': 0}, scale={'x':10, 'y': 10, 'z': 10})
 
-    # Пример 3D модели
-    model = mf.create('model_obj', path='doom_guy/doom_guy.glb', position={'x':0, 'y': 0, 'z': 0}, scale={'x':10, 'y': 10, 'z': 10})
+    fetcher = PlanetDataFetcher()
+    positions = fetcher.get_all_planets_data()
 
-    directional_light = ef.create('light')
-    ambient_light = ef.create('light', light_type='AmbientLight')
+    for planet, data in positions.items():
+        if data:
 
-    spacing = 80
-    y_position = 25
+            ef.create('sphere',
+                      radius=data['radius_km']/1000, widthSegments=8, heightSegments=8,
+                      position={'x': data['x'] * 100, 'y': data['y'] * 100, 'z': data['z'] * 100},
+                      color="#{:06x}".format(random.randint(0, 0xFFFFFF)))
+
+        else:
+            print(f"{planet}: Данные недоступны")
 
     plane = ef.create(
             'plane',
@@ -35,43 +39,9 @@ def send_data():
             630,
             texture='textures/map.svg',
             color=0xffffff,
-            position={'x':0, 'y': 0, 'z': 0},
+            position={'x':0, 'y': -200, 'z': 0},
             rotation={'x': 0,'y': 0, 'z': 0}
             )
-
-    box = ef.create('box',
-              width=30, height=40, depth=50,
-              position={'x': 0 * spacing, 'y': y_position, 'z': 0},
-              color=0xff0000,
-              )
-
-    ef.create('sphere',
-              radius=20, widthSegments=32, heightSegments=32,
-              position={'x': 1 * spacing, 'y': y_position, 'z': 0},
-              color=0x00ff00)
-
-    ef.create('plane',
-              width=60, height=60,
-              position={'x': 2 * spacing, 'y': y_position, 'z': 0},
-              color=0x0000ff)
-
-    ef.create('cylinder',
-              radiusTop=15, radiusBottom=15, height=60,
-              radialSegments=16, heightSegments=4,
-              position={'x': 3 * spacing, 'y': y_position, 'z': 0},
-              color=0xffff00)
-
-    ef.create('cone',
-              radius=15, height=150,
-              radialSegments=16, heightSegments=4,
-              position={'x': 4 * spacing, 'y': y_position, 'z': 0},
-              color=0xff00ff)
-
-    ef.create('torus',
-              radius=20, tube=6,
-              radialSegments=16, tubularSegments=150,
-              position={'x': 5 * spacing, 'y': y_position, 'z': 0},
-              color=0x00ffff)
 
     lights = {
             light.name:
