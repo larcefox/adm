@@ -171,3 +171,4 @@ __pycache__
 .venv/bin/Activate.ps1
 .venv/bin/python
 .venv/bin/python3
+config.py
