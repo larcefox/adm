@@ -5,6 +5,7 @@ __author__ = "Bac9l Xyer"
 __copyright__ = "GPLv3"
 
 import abc
+import uuid
 
 
 class Entity_manager():
@@ -33,6 +34,11 @@ class Entity_manager():
 class Entity(abc.ABC, Entity_manager):
     manager = Entity_manager()
 
+    def __init__(self, scale: dict | None = None, visible: bool = True) -> None:
+        self.uuid = str(uuid.uuid4())
+        self.scale = scale or {'x': 1, 'y': 1, 'z': 1}
+        self.visible = visible
+
     @abc.abstractmethod
     def return_dict(self):
         pass
@@ -55,8 +61,11 @@ class Line(Entity):
             position2: dict | None = None,
             material_type: str = 'LineBasicMaterial',
             cast_shadow=True,
-            receive_shadow=True
+            receive_shadow=True,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.geometry_type = 'BufferGeometry'
         self.name = name
         self.position1 = position1 or {'x': 0, 'y': 0, 'z': 0}
@@ -73,6 +82,9 @@ class Line(Entity):
             'material': self.material,
             'position1': self.position1,
             'position2': self.position2,
+            'scale': self.scale,
+            'visible': self.visible,
+            'uuid': self.uuid,
             'castShadow': self.cast_shadow,
             'receiveShadow': self.receive_shadow
         }
@@ -93,8 +105,11 @@ class Figure(Entity):
             wireframe=False,
             transparent=False,
             triangls: list | None = None,
-            opacity=0.5
+            opacity=0.5,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.geometry_type = 'BufferGeometry'
         self.name = name
         self.vertices = vertices or []
@@ -115,6 +130,9 @@ class Figure(Entity):
             'vertices': self.vertices,
             'vertices_len': self.vertices_len,
             'rotation': self.rotation,
+            'scale': self.scale,
+            'visible': self.visible,
+            'uuid': self.uuid,
             'castShadow': self.cast_shadow,
             'receiveShadow': self.receive_shadow,
             'triangls': self.triangls
@@ -134,8 +152,11 @@ class Box(Entity):
             rotation: dict | None = None,
             material_type: str = 'MeshBasicMaterial',
             cast_shadow=True,
-            receive_shadow=True
+            receive_shadow=True,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.geometry_type = 'BoxGeometry'
         self.geometry = {'width': width, 'height': height, 'depth': depth}
         self.name = name
@@ -154,6 +175,9 @@ class Box(Entity):
             'material': self.material,
             'position': self.position,
             'rotation': self.rotation,
+            'scale': self.scale,
+            'visible': self.visible,
+            'uuid': self.uuid,
             'castShadow': self.cast_shadow,
             'receiveShadow': self.receive_shadow
         }
@@ -304,8 +328,11 @@ class Camera(Entity):
             aspect_ratio: str = 'innerWidth / innerHeight',
             clipping_plane_near: float = 0.1,
             clipping_plane_far: float = 10000,
-            position: dict | None = None
+            position: dict | None = None,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.camera_type = camera_type
         self.fild_of_view = fild_of_view
@@ -328,8 +355,11 @@ class OrthographicCamera(Entity):
             near: float = 0.1,
             far: float = 2000,
             name: str = 'OrthographicCamera',
-            position: dict | None = None
+            position: dict | None = None,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.camera_type = 'OrthographicCamera'
         self.left = left
@@ -354,8 +384,11 @@ class Light(Entity):
             shadow: dict = None,
             target_position: dict | None = None,
             position: dict | None = None,
-            cast_shadow=True
+            cast_shadow=True,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.color = color
         self.intensity = intensity
@@ -375,7 +408,10 @@ class Light(Entity):
 
 class AmbientLight(Entity):
     def __init__(self, color: int = 0xffffff, intensity: float = 1.0, name: str = 'AmbientLight',
-                 position: dict | None = None) -> None:
+                 position: dict | None = None,
+                 scale: dict | None = None,
+                 visible: bool = True) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.light_type = 'AmbientLight'
         self.color = color
@@ -389,7 +425,10 @@ class AmbientLight(Entity):
 class HemisphereLight(Entity):
     def __init__(self, sky_color: int = 0xffffff, ground_color: int = 0x444444,
                  intensity: float = 1.0, name: str = 'HemisphereLight',
-                 position: dict | None = None) -> None:
+                 position: dict | None = None,
+                 scale: dict | None = None,
+                 visible: bool = True) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.light_type = 'HemisphereLight'
         self.sky_color = sky_color
@@ -411,8 +450,11 @@ class PointLight(Entity):
             decay: float = 2.0,
             shadow: dict | None = None,
             position: dict | None = None,
-            cast_shadow=True
+            cast_shadow=True,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.light_type = 'PointLight'
         self.color = color
@@ -444,8 +486,11 @@ class SpotLight(Entity):
             shadow: dict | None = None,
             target_position: dict | None = None,
             position: dict | None = None,
-            cast_shadow=True
+            cast_shadow=True,
+            scale: dict | None = None,
+            visible: bool = True
     ) -> None:
+        super().__init__(scale=scale, visible=visible)
         self.name = name
         self.light_type = 'SpotLight'
         self.color = color
