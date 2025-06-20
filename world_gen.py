@@ -10,6 +10,7 @@ from domains.arch_class import ArchFabric as af
 from domains.arch_class import Arch
 from lib.pnoise_map import MapGen
 from lib.postgres_con import Database
+from lib.neur_net import YandexGPTApiService
 import asyncio
 import random
 
@@ -76,9 +77,31 @@ def send_data():
             'model': models,
             'arch': arch
             }
+
+async def ai_generate_additions(session_id: str = "world_gen") -> dict:
+    """Generate additional world objects via YandexGPT API."""
+    service = YandexGPTApiService()
+    prompt = (
+        "Создай JSON с дополнительными объектами мира. "
+        "Используй ключи 'light', 'shape', 'line', 'figure', 'model', 'arch'. "
+        "Каждый ключ должен содержать словарь объектов."
+    )
+    try:
+        response = await service.get_response(session_id, prompt)
+        return json.loads(response)
+    except Exception as e:
+        print(f"AI generation failed: {e}")
+        return {}
     
 async def main():
         elements = send_data()
+        ai_elements = await ai_generate_additions()
+        for key, value in ai_elements.items():
+                if key in elements:
+                        elements[key].update(value)
+                else:
+                        elements[key] = value
+
         # Instantiate the Database class
         db = Database()
 
