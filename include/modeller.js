@@ -32,6 +32,12 @@ class Warehouse{
 
     this._scene = new THREE.Scene();
 
+    // Chunk settings for simple world generation
+    this._chunkSize = 100;
+    this._viewRadius = 2;
+    this._chunks = {};
+    this._generateWorldAroundCamera();
+
     const fov = {{ camera.fild_of_view }};
     const aspect = {{ camera.aspect_ratio }};
     const near = {{ camera.clipping_plane_near }};
@@ -277,10 +283,40 @@ class Warehouse{
 
   _RemoveEntitys() {
     console.log(this._scene.children);
-    while(this._scene.children.length > 0){ 
-      this._scene.remove(this._scene.children[0]); 
+    while(this._scene.children.length > 0){
+      this._scene.remove(this._scene.children[0]);
     };
   };
+
+  _generateWorldAroundCamera() {
+    const cx = Math.floor(this._camera.position.x / this._chunkSize);
+    const cz = Math.floor(this._camera.position.z / this._chunkSize);
+
+    for (let x = cx - this._viewRadius; x <= cx + this._viewRadius; x++) {
+      for (let z = cz - this._viewRadius; z <= cz + this._viewRadius; z++) {
+        const key = `${x}_${z}`;
+        if (!this._chunks[key]) {
+          const plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(this._chunkSize, this._chunkSize),
+            new THREE.MeshStandardMaterial({ color: 0x447744 })
+          );
+          plane.rotation.x = -Math.PI / 2;
+          plane.position.set(x * this._chunkSize, 0, z * this._chunkSize);
+          this._scene.add(plane);
+          this._chunks[key] = plane;
+        }
+      }
+    }
+
+    for (const key in this._chunks) {
+      const [x, z] = key.split('_').map(Number);
+      if (Math.abs(x - cx) > this._viewRadius || Math.abs(z - cz) > this._viewRadius) {
+        const chunk = this._chunks[key];
+        this._scene.remove(chunk);
+        delete this._chunks[key];
+      }
+    }
+  }
 
   _RAF() {
     timer.update();
@@ -321,6 +357,8 @@ class Warehouse{
         //this._DrawShape( {{ figure }} );
         this._DrawTriangls( {{ figure }} );
       };
+
+      this._generateWorldAroundCamera();
 
       this._threejs.render(this._scene, this._camera);
       this._RAF();
