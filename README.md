@@ -10,10 +10,10 @@
 
 ## ✨ Возможности
 
-* Поддержка базовых геометрий: Box, Sphere, Plane, Cylinder, Cone, Torus
+* Поддержка базовых геометрий: Box, Sphere, Plane, Cylinder, Cone, Torus, Circle, Ring
 * Создание пользовательских фигур с вершинами и треугольниками
 * Поддержка различных типов камер: Perspective и Orthographic
-* Источники света: Directional, Ambient, Hemisphere
+* Источники света: Directional, Ambient, Hemisphere, Point, Spot
 * Управление списками сущностей через `Entity_manager`
 * Автоматическая регистрация сущностей в менеджере
 * Унифицированный метод `return_dict()` для сериализации объектов
@@ -39,9 +39,9 @@ print(box.return_dict())
 
 * `Entity` – абстрактный базовый класс
 * `Entity_manager` – управляет списками сущностей по типу
-* Геометрии: `Box`, `Sphere`, `Plane`, `Cylinder`, `Cone`, `Torus`, `Figure`
+* Геометрии: `Box`, `Sphere`, `Plane`, `Cylinder`, `Cone`, `Torus`, `Circle`, `Ring`, `Figure`
 * Камеры: `Camera`, `OrthographicCamera`
-* Свет: `Light`, `AmbientLight`, `HemisphereLight`
+* Свет: `Light`, `AmbientLight`, `HemisphereLight`, `PointLight`, `SpotLight`
 * Прочее: `Line`
 * `Entity_fabric` – статическая фабрика для создания сущностей по имени
 
