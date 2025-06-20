@@ -125,6 +125,7 @@ class MedievalWall(Arch):
             color:int = 0xA000FF,
             texture = None,
             vertices_len = 3,
+            position: dict = {'x': 0, 'y': 0, 'z': 0},
             rotation: dict = {'x': 0, 'y': 0, 'z': 0},
             material_type: str = 'MeshBasicMaterial',
             cast_shadow = True,
@@ -152,6 +153,7 @@ class MedievalWall(Arch):
         self.name = name
         self.vertices_len = vertices_len
         self.rotation = rotation
+        self.position = position
         self.material = {'texture': texture} if texture else {'color': color, 'wireframe': wireframe, 'transparent': transparent, 'opacity': opacity}
         self.material_type = material_type
         self.cast_shadow = cast_shadow
@@ -261,6 +263,7 @@ class KremlinWall(Arch):
             color:int = 0xA000FF,
             texture = None,
             vertices_len = 3,
+            position: dict = {'x': 0, 'y': 0, 'z': 0},
             rotation: dict = {'x': 0, 'y': 0, 'z': 0},
             material_type: str = 'MeshBasicMaterial',
             cast_shadow = True,
@@ -287,6 +290,7 @@ class KremlinWall(Arch):
         self.geometry_type = 'BufferGeometry'
         self.name = name
         self.vertices_len = vertices_len
+        self.position = position
         self.rotation = rotation
         self.material = {'texture': texture} if texture else {'color': color, 'wireframe': wireframe, 'transparent': transparent, 'opacity': opacity}
         self.material_type = material_type

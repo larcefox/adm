@@ -9,12 +9,13 @@ class MapGen:
         scale=100,
         octaves=10,
         persistence=0.5,
-        lacunarity=3
+        lacunarity=3,
+        seed=np.random.randint(0, 100),
         ) -> None:
         
         self.shape = shape
         self.scale = scale
-        self.seed = np.random.randint(0, 100)
+        self.seed = seed
         self.repeatx = self.shape[0]
         self.repeaty = self.shape[1]
         self.octaves = octaves
