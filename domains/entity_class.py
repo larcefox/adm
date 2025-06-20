@@ -253,6 +253,48 @@ class Torus(Box):
         }
 
 
+class Circle(Box):
+    def __init__(
+            self,
+            radius: float,
+            segments: int = 32,
+            thetaStart: float = 0.0,
+            thetaLength: float = 6.283185307179586,
+            **kwargs
+    ):
+        super().__init__(0, 0, 0, **kwargs)
+        self.geometry_type = 'CircleGeometry'
+        self.geometry = {
+            'radius': radius,
+            'segments': segments,
+            'thetaStart': thetaStart,
+            'thetaLength': thetaLength
+        }
+
+
+class Ring(Box):
+    def __init__(
+            self,
+            innerRadius: float,
+            outerRadius: float,
+            thetaSegments: int = 32,
+            phiSegments: int = 1,
+            thetaStart: float = 0.0,
+            thetaLength: float = 6.283185307179586,
+            **kwargs
+    ):
+        super().__init__(0, 0, 0, **kwargs)
+        self.geometry_type = 'RingGeometry'
+        self.geometry = {
+            'innerRadius': innerRadius,
+            'outerRadius': outerRadius,
+            'thetaSegments': thetaSegments,
+            'phiSegments': phiSegments,
+            'thetaStart': thetaStart,
+            'thetaLength': thetaLength
+        }
+
+
 class Camera(Entity):
     def __init__(
             self,
@@ -359,6 +401,72 @@ class HemisphereLight(Entity):
         return self.__dict__
 
 
+class PointLight(Entity):
+    def __init__(
+            self,
+            name: str = 'PointLight',
+            color: int = 0xffffff,
+            intensity: float = 1.0,
+            distance: float = 0.0,
+            decay: float = 2.0,
+            shadow: dict | None = None,
+            position: dict | None = None,
+            cast_shadow=True
+    ) -> None:
+        self.name = name
+        self.light_type = 'PointLight'
+        self.color = color
+        self.intensity = intensity
+        self.distance = distance
+        self.decay = decay
+        self.shadow = shadow or {
+            'bias': -0.001,
+            'mapSize': {'width': 1024, 'height': 1024},
+            'camera': {'near': 0.5, 'far': 500}
+        }
+        self.position = position or {'x': 0, 'y': 0, 'z': 0}
+        self.cast_shadow = cast_shadow
+
+    def return_dict(self) -> dict:
+        return self.__dict__
+
+
+class SpotLight(Entity):
+    def __init__(
+            self,
+            name: str = 'SpotLight',
+            color: int = 0xffffff,
+            intensity: float = 1.0,
+            distance: float = 0.0,
+            angle: float = 1.047198,
+            penumbra: float = 0.0,
+            decay: float = 2.0,
+            shadow: dict | None = None,
+            target_position: dict | None = None,
+            position: dict | None = None,
+            cast_shadow=True
+    ) -> None:
+        self.name = name
+        self.light_type = 'SpotLight'
+        self.color = color
+        self.intensity = intensity
+        self.distance = distance
+        self.angle = angle
+        self.penumbra = penumbra
+        self.decay = decay
+        self.shadow = shadow or {
+            'bias': -0.001,
+            'mapSize': {'width': 1024, 'height': 1024},
+            'camera': {'near': 0.5, 'far': 500, 'fov': 30}
+        }
+        self.target_position = target_position or {'x': 0, 'y': 0, 'z': 0}
+        self.position = position or {'x': 0, 'y': 0, 'z': 0}
+        self.cast_shadow = cast_shadow
+
+    def return_dict(self) -> dict:
+        return self.__dict__
+
+
 class Entity_fabric:
     @staticmethod
     def create(entity_type, *args, **kwargs):
@@ -369,9 +477,13 @@ class Entity_fabric:
             'cylinder': (Cylinder, 'shape'),
             'cone': (Cone, 'shape'),
             'torus': (Torus, 'shape'),
+            'circle': (Circle, 'shape'),
+            'ring': (Ring, 'shape'),
             'camera': (Camera, 'camera'),
             'ortho_camera': (OrthographicCamera, 'camera'),
             'light': (Light, 'light'),
+            'point_light': (PointLight, 'light'),
+            'spot_light': (SpotLight, 'light'),
             'ambient': (AmbientLight, 'light'),
             'hemisphere': (HemisphereLight, 'light'),
             'line': (Line, 'line'),
