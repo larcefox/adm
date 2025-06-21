@@ -93,7 +93,9 @@ class Warehouse{
     this._controls.target.set(0, 20, 0);
     // Listen for keyboard events to enable WASD panning
     this._controls.keys = { LEFT: 'KeyA', UP: 'KeyW', RIGHT: 'KeyD', BOTTOM: 'KeyS' };
-    this._controls.listenToKeyEvents(window);
+    if (typeof this._controls.listenToKeyEvents === 'function') {
+      this._controls.listenToKeyEvents(window);
+    }
 
     // Optional: Configure controls for a more FPS-like experience
     this._controls.enableDamping = true; // smooth movement
