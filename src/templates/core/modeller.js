@@ -35,6 +35,7 @@ var all_3d_data = null;
 var isRecording = false;
 var audioProcessorNode;
 var audioContext;
+var playbackContext;
 
 
 let lastSentTime = 0;
@@ -492,10 +493,14 @@ class Warehouse{
 
             // Listen for audio data from the processor
             audioProcessorNode.port.onmessage = (event) => {
-                const audioData = event.data;
-                const base64_data = btoa(audioData)
-                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': base64_data}}));
-                console.log(audioData)
+                const float32Data = event.data;
+                const uint8Data = new Uint8Array(float32Data.buffer);
+                let binary = '';
+                for (let i = 0; i < uint8Data.length; i++) {
+                    binary += String.fromCharCode(uint8Data[i]);
+                }
+                const base64Data = btoa(binary);
+                _WS._sendMessage(JSON.stringify({'voice': {'{{ user }}': base64Data}}));
             };
         }
 
@@ -529,28 +534,23 @@ class Warehouse{
       const recivedDataJson = JSON.parse(receivedData)
       if (recivedDataJson && recivedDataJson["voice"]){
         for (const [user, base64Data] of Object.entries(recivedDataJson["voice"])) {
+            const binary = atob(base64Data);
+            const byteArray = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                byteArray[i] = binary.charCodeAt(i);
+            }
+            const float32Array = new Float32Array(byteArray.buffer);
 
-            const audioChunks = atob(base64Data);
-            const float32Array = Float32Array.from(audioChunks.split(","), parseFloat);
+            if (!playbackContext) {
+                playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
 
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const sampleRate = audioContext.sampleRate;
-
-            console.log(float32Array)
-            // Create an empty stereo AudioBuffer with the same length as the array
-            const audioBuffer = audioContext.createBuffer(1, float32Array.length, sampleRate);
-
-            // Copy the Float32Array data into the buffer's first channel
+            const audioBuffer = playbackContext.createBuffer(1, float32Array.length, playbackContext.sampleRate);
             audioBuffer.copyToChannel(float32Array, 0, 0);
 
-            // Create an AudioBufferSourceNode to play the buffer
-            const source = audioContext.createBufferSource();
+            const source = playbackContext.createBufferSource();
             source.buffer = audioBuffer;
-
-            // Connect the source to the audio context's destination (speakers)
-            source.connect(audioContext.destination);
-
-            // Start playing the audio
+            source.connect(playbackContext.destination);
             source.start();
             _WS.receivedData = null;
         };
