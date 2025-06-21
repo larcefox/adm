@@ -5,7 +5,7 @@ import { Earcut } from './static/js/Earcut.js';
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
 import { PositionalRadio } from './static/js/positional_radio.js';
-import dat from "https://cdn.skypack.dev/dat.gui";
+import dat from './static/js/dat.js';
 
 function webglAvailable() {
   try {
