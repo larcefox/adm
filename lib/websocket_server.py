@@ -14,6 +14,7 @@ db = Database()
 notify_db = Database()
 
 async def notify_listener():
+
     print("notify_listener started")  # Debug: function entry
     try:
         await notify_db.connect()
