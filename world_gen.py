@@ -81,6 +81,19 @@ def send_data():
 async def ai_generate_additions(session_id: str = "world_gen") -> dict:
     """Generate additional world objects via YandexGPT API."""
     service = YandexGPTApiService()
+    if not service.api_key or not service.model_uri:
+        print("YandexGPT credentials missing. Skipping AI generation.")
+        return {
+            "shape": {
+                "sample_box": {
+                    "type": "box",
+                    "width": 1,
+                    "height": 1,
+                    "depth": 1,
+                }
+            }
+        }
+
     prompt = (
         "Создай JSON с дополнительными объектами мира. "
         "Используй ключи 'light', 'shape', 'line', 'figure', 'model', 'arch'. "
@@ -131,3 +144,4 @@ async def main():
 
 if __name__ == "__main__":
         asyncio.run(main())
+
