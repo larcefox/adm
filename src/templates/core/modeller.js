@@ -7,6 +7,17 @@ import { WS } from './static/js/websocket.js';
 import { PositionalRadio } from './static/js/positional_radio.js';
 import dat from "https://cdn.skypack.dev/dat.gui";
 
+function webglAvailable() {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!window.WebGLRenderingContext && (
+      canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 
 var camera_position;
 
@@ -35,6 +46,13 @@ const _WS = new WS();
 
 class Warehouse{
   constructor(Warehouse) {
+    if (!webglAvailable()) {
+      console.error('WebGL not supported');
+      const message = document.createElement('div');
+      message.textContent = 'WebGL not supported in this environment.';
+      document.getElementById('app').appendChild(message);
+      return;
+    }
     this._Initialize();
   }
 
