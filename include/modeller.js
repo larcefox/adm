@@ -4,12 +4,30 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/
 import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
 import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 
+function webglAvailable() {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!window.WebGLRenderingContext && (
+      canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 var timer = new Timer();
 var cur_tick;
 var last_tick = 0;
 
 class Warehouse{
   constructor(Warehouse) {
+    if (!webglAvailable()) {
+      console.error('WebGL not supported');
+      const message = document.createElement('div');
+      message.textContent = 'WebGL not supported in this environment.';
+      document.getElementById('app').appendChild(message);
+      return;
+    }
     this._Initialize();
   }
 
