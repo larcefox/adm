@@ -1,48 +1,38 @@
 #!/usr/bin/python
 import json
-import math
 from domains.entity_class import Entity_fabric as ef
-from domains.entity_class import Entity, Light, AmbientLight
-from domains.model_class import ModelFabric as mf
-from domains.model_class import Model
-from domains.planet_postion_class import PlanetDataFetcher
-from domains.arch_class import ArchFabric as af
-from domains.arch_class import Arch
-from lib.pnoise_map import MapGen
+from domains.entity_class import Entity
 from lib.postgres_con import Database
-from lib.neur_net import YandexGPTApiService
 import asyncio
-import random
 
-
-noise_map = MapGen()
-terrain = noise_map.map_gen()
 
 def send_data():
+    """Create sample objects for all entity types."""
 
-    fetcher = PlanetDataFetcher()
-    positions = fetcher.get_all_planets_data()
+    # Shapes
+    ef.create('box', 10, 10, 10, color=0xff0000)
+    ef.create('sphere', radius=5, widthSegments=8, heightSegments=8, position={'x': 15, 'y': 0, 'z': 0})
+    ef.create('plane', 20, 20, position={'x': 0, 'y': -5, 'z': 0})
+    ef.create('cylinder', radiusTop=3, radiusBottom=3, height=6, position={'x': -15, 'y': 0, 'z': 0})
+    ef.create('cone', radius=3, height=6, position={'x': 30, 'y': 0, 'z': 0})
+    ef.create('torus', radius=4, tube=1, position={'x': 45, 'y': 0, 'z': 0})
+    ef.create('circle', radius=5, position={'x': 60, 'y': 0, 'z': 0})
+    ef.create('ring', innerRadius=2, outerRadius=5, position={'x': 75, 'y': 0, 'z': 0})
 
-    for planet, data in positions.items():
-        if data:
+    # Line and Figure
+    ef.create('line', position1={'x': 0, 'y': 0, 'z': 0}, position2={'x': 10, 'y': 10, 'z': 0})
+    ef.create('figure', vertices=[0, 0, 0, 5, 0, 0, 0, 5, 0], triangls=[0, 1, 2])
 
-            ef.create('sphere',
-                      radius=data['radius_km']/1000, widthSegments=8, heightSegments=8,
-                      position={'x': data['x'] * 100, 'y': data['y'] * 100, 'z': data['z'] * 100},
-                      color="#{:06x}".format(random.randint(0, 0xFFFFFF)))
+    # Cameras
+    ef.create('camera')
+    ef.create('ortho_camera', left=-5, right=5, top=5, bottom=-5)
 
-        else:
-            print(f"{planet}: Данные недоступны")
-
-    plane = ef.create(
-            'plane',
-            630,
-            630,
-            texture='textures/map.svg',
-            color=0xffffff,
-            position={'x':0, 'y': -200, 'z': 0},
-            rotation={'x': 0,'y': 0, 'z': 0}
-            )
+    # Lights
+    ef.create('light')
+    ef.create('point_light')
+    ef.create('spot_light')
+    ef.create('ambient')
+    ef.create('hemisphere')
 
     lights = {
             light.name:
@@ -60,14 +50,8 @@ def send_data():
             figure.name:
             figure.return_dict() for figure in Entity.manager.get_entity_list('figure')
             }
-    models = {
-            model.name:
-            model.return_dict() for model in Model.manager.get_model_list('model_obj')
-            }
-    arch = {
-            arch.name:
-            arch.return_dict() for arch in Arch.manager.get_arch_list('arch')
-            }
+    models = {}
+    arch = {}
 
     return {
             'light': lights,
@@ -78,42 +62,9 @@ def send_data():
             'arch': arch
             }
 
-async def ai_generate_additions(session_id: str = "world_gen") -> dict:
-    """Generate additional world objects via YandexGPT API."""
-    service = YandexGPTApiService()
-    if not service.api_key or not service.model_uri:
-        print("YandexGPT credentials missing. Skipping AI generation.")
-        return {
-            "shape": {
-                "sample_box": {
-                    "type": "box",
-                    "width": 1,
-                    "height": 1,
-                    "depth": 1,
-                }
-            }
-        }
-
-    prompt = (
-        "Создай JSON с дополнительными объектами мира. "
-        "Используй ключи 'light', 'shape', 'line', 'figure', 'model', 'arch'. "
-        "Каждый ключ должен содержать словарь объектов."
-    )
-    try:
-        response = await service.get_response(session_id, prompt)
-        return json.loads(response)
-    except Exception as e:
-        print(f"AI generation failed: {e}")
-        return {}
     
 async def main():
         elements = send_data()
-        ai_elements = await ai_generate_additions()
-        for key, value in ai_elements.items():
-                if key in elements:
-                        elements[key].update(value)
-                else:
-                        elements[key] = value
 
         # Instantiate the Database class
         db = Database()
