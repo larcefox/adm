@@ -1,7 +1,7 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/loaders/GLTFLoader.js";
-import { Earcut } from "https://cdn.jsdelivr.net/npm/three@0.121.1/src/extras/Earcut.js";
+import * as THREE from './static/js/three.module.js';
+import { OrbitControls } from './static/js/OrbitControls.js';
+import { GLTFLoader } from './static/js/GLTFLoader.js';
+import { Earcut } from './static/js/Earcut.js';
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
 import { PositionalRadio } from './static/js/positional_radio.js';
