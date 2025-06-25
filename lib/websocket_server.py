@@ -99,6 +99,11 @@ async def echo_messages(websocket, path):
             except websockets.ConnectionClosedOK:
                 print(f"Client {websocket.remote_address} disconnected.")
                 break
+            except websockets.ConnectionClosedError as e:
+                print(
+                    f"Client {websocket.remote_address} disconnected with error: {e}"
+                )
+                break
             except Exception as e:
                 print(f"Error processing message from client: {e}")
                 continue
