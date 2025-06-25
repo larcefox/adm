@@ -69,11 +69,14 @@
 
         createChat({
             webhookUrl: 'https://n8n.qure.space/webhook/8cc7aa6d-d84d-46a6-a820-d2e2dad7f415/chat',
+            webhookConfig: {
+                method: 'POST',
+                headers: {"UserID": "{{ user }}"}
+            },
             showWelcomeScreen: false,
             loadPreviousSession: true,
             loadPreviousSession: true,
-            showWelcomeScreen: false,
-            sessionId: '{{ user }}'
+            showWelcomeScreen: false
             
         });
 
