@@ -84,7 +84,7 @@ async def main():
                         for pice in elements[element]:
                                 pice_json = json.dumps({pice: elements[element][pice]})
                                 # нужно указать пользователя
-                                query = f"INSERT INTO world.{element} (data, user_id) VALUES ('{pice_json}', '837c5740-a7d6-4aeb-b050-caad708c6607')"
+                                query = f"INSERT INTO world.{element} (data, user_id) VALUES ('{pice_json}', 'a6eab050-41ba-481c-badf-4e955665c543')"
                                 print(query)
                                 data = await db.execute_query(query)
                                 print(data)

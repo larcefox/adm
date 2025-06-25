@@ -28,7 +28,7 @@ def upgrade():
                """)
 
     op.execute("""
-                CREATE TRIGGER shape_update_trigger
+                CREATE OR REPLACE TRIGGER shape_update_trigger
                 AFTER INSERT OR UPDATE ON world.shape
                 FOR EACH ROW EXECUTE FUNCTION world.notify_shape_update();
                """)
