@@ -1,6 +1,8 @@
 import * as THREE from './static/js/three.module.js';
 import { OrbitControls } from './static/js/OrbitControls.js';
 import { GLTFLoader } from './static/js/GLTFLoader.js';
+import { FontLoader } from './static/js/FontLoader.js';
+import { TextGeometry } from './static/js/TextGeometry.js';
 import { Earcut } from './static/js/Earcut.js';
 // import { Timer } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/misc/Timer.js';
 import { WS } from './static/js/websocket.js';
@@ -359,23 +361,43 @@ class Warehouse{
               material = new THREE[value.material_type](value.material);
           }
 
-          const figure = new THREE[value.geometry_type](...Object.values(value.geometry));
-          const mesh = new THREE.Mesh(figure, material);
-          mesh.name = key;
-          mesh.castShadow = value.castShadow
-          mesh.receiveShadow = value.receiveShadow
-          this._scene.add(mesh);
-
-          //add mesh position
-          mesh.position.set(...Object.values(value.position));
-
-          //add mesh rotation
-          if (value.geometry_type === 'PlaneGeometry') {
-            // Домножаем x на -Math.PI/2 для горизонтального положения лицом вверх
-            const rx = (value.rotation?.x || 0) - Math.PI / 2;
-            mesh.rotation.set(rx, value.rotation?.y || 0, value.rotation?.z || 0);
+          if (value.geometry_type === 'TextGeometry') {
+              const loader = new FontLoader();
+              loader.load(
+                '{{ url_for('static', filename='fonts/helvetiker_regular.typeface.json') }}',
+                (font) => {
+                  const params = { ...value.geometry, font };
+                  const text = params.text;
+                  delete params.text;
+                  const figure = new TextGeometry(text, params);
+                  const mesh = new THREE.Mesh(figure, material);
+                  mesh.name = key;
+                  mesh.castShadow = value.castShadow;
+                  mesh.receiveShadow = value.receiveShadow;
+                  this._scene.add(mesh);
+                  mesh.position.set(...Object.values(value.position));
+                  mesh.rotation.set(...Object.values(value.rotation));
+                }
+              );
           } else {
-            mesh.rotation.set(...Object.values(value.rotation));
+              const figure = new THREE[value.geometry_type](...Object.values(value.geometry));
+              const mesh = new THREE.Mesh(figure, material);
+              mesh.name = key;
+              mesh.castShadow = value.castShadow;
+              mesh.receiveShadow = value.receiveShadow;
+              this._scene.add(mesh);
+
+              //add mesh position
+              mesh.position.set(...Object.values(value.position));
+
+              //add mesh rotation
+              if (value.geometry_type === 'PlaneGeometry') {
+                // Домножаем x на -Math.PI/2 для горизонтального положения лицом вверх
+                const rx = (value.rotation?.x || 0) - Math.PI / 2;
+                mesh.rotation.set(rx, value.rotation?.y || 0, value.rotation?.z || 0);
+              } else {
+                mesh.rotation.set(...Object.values(value.rotation));
+              }
           }
       };
   };
