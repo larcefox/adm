@@ -18,6 +18,7 @@ def send_data():
     ef.create('torus', radius=4, tube=1, position={'x': 45, 'y': 0, 'z': 0})
     ef.create('circle', radius=5, position={'x': 60, 'y': 0, 'z': 0})
     ef.create('ring', innerRadius=2, outerRadius=5, position={'x': 75, 'y': 0, 'z': 0})
+    ef.create('text3d', 'Hello 3D', size=5, height=1, position={'x': 90, 'y': 0, 'z': 0})
 
     # Line and Figure
     ef.create('line', position1={'x': 0, 'y': 0, 'z': 0}, position2={'x': 10, 'y': 10, 'z': 0})
