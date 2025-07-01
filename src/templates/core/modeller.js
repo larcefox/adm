@@ -380,7 +380,29 @@ class Warehouse{
                 }
               );
           } else {
-              const figure = new THREE[value.geometry_type](...Object.values(value.geometry));
+              let figure;
+              if (value.geometry_type === 'ConeGeometry') {
+                const g = value.geometry;
+                figure = new THREE.ConeGeometry(
+                  g.radius,
+                  g.height,
+                  g.radialSegments,
+                  g.heightSegments,
+                  g.openEnded,
+                );
+              } else if (value.geometry_type === 'CylinderGeometry') {
+                const g = value.geometry;
+                figure = new THREE.CylinderGeometry(
+                  g.radiusTop,
+                  g.radiusBottom,
+                  g.height,
+                  g.radialSegments,
+                  g.heightSegments,
+                  g.openEnded,
+                );
+              } else {
+                figure = new THREE[value.geometry_type](...Object.values(value.geometry));
+              }
               const mesh = new THREE.Mesh(figure, material);
               mesh.name = key;
               mesh.castShadow = value.castShadow;
