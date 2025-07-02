@@ -476,7 +476,7 @@ class Warehouse{
           console.log(recivedDataJson["all_3d_data"]["line_state"])
           this._LoadEntity( recivedDataJson["all_3d_data"]["entity_state"] );
           this._LoadLight( recivedDataJson["all_3d_data"]["light_state"] );
-          //this._DrawEdges( recivedDataJson["all_3d_data"]["line_state"] );
+          this._DrawEdges( recivedDataJson["all_3d_data"]["line_state"] );
           this._DrawFigure( recivedDataJson["all_3d_data"]["figure_state"] );
           this._LoadModel( recivedDataJson["all_3d_data"]["model_state"] );
           this._DrawArch( recivedDataJson["all_3d_data"]["arch_state"] );
