@@ -10,6 +10,11 @@ class Database:
     def __init__(self):
         # Fetch the database connection string from environment variables
         self.database_url = os.getenv('DATABASE_URL')
+        if not self.database_url:
+            raise ValueError(
+                "DATABASE_URL environment variable is not set. "
+                "Please define it to establish a database connection."
+            )
         self.connection = None
 
     async def connect(self):
