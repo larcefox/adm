@@ -352,7 +352,7 @@ class Warehouse{
           if ('texture' in value.material){
               material = 
                   new THREE[value.material_type]
-                ({ map: new THREE.TextureLoader().load('{{ url_for('static', filename='textures/blueprint.jpg') }}'),
+                ({ map: new THREE.TextureLoader().load('static/' + value.material.texture),
                 side: THREE.DoubleSide,
                 transparent: true,
                 opacity: 0.8,

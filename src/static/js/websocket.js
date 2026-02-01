@@ -6,8 +6,8 @@ class WS {
 
     _Initialize() {
         // Create a new WebSocket instance
-        this._websocket = new WebSocket('wss://qure.space/ws');
-        //this._websocket = new WebSocket('ws://127.0.0.1:8765');
+        //this._websocket = new WebSocket('wss://qure.space/ws');
+        this._websocket = new WebSocket('ws://127.0.0.1:8765');
 
         // Connection opened
         this._websocket.onopen = (event) => {
@@ -46,7 +46,7 @@ class WS {
 
     // Method to access the received data
     getReceivedData() {
-        console.log(this.receivedData);
+        // console.log(this.receivedData);
         return this.receivedData;
     }
 

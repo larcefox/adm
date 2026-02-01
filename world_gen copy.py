@@ -10,15 +10,30 @@ def send_data():
     """Create sample objects for all entity types."""
 
     # Shapes
-    # ef.create('box', 10, 10, 10, color=0xff0000)
-    # ef.create('sphere', radius=5, widthSegments=8, heightSegments=8, position={'x': 15, 'y': 0, 'z': 0})
-    ef.create('plane', 225, 143, position={'x': 100, 'y': 100, 'z': 0}, texture='textures/rondo_no_text.png')
-    # ef.create('cylinder', radiusTop=3, radiusBottom=3, height=6, position={'x': -15, 'y': 0, 'z': 0})
-    # ef.create('cone', radius=3, height=6, position={'x': 30, 'y': 0, 'z': 0})
-    # ef.create('torus', radius=4, tube=1, position={'x': 45, 'y': 0, 'z': 0})
-    # ef.create('circle', radius=5, position={'x': 60, 'y': 0, 'z': 0})
-    # ef.create('ring', innerRadius=2, outerRadius=5, position={'x': 75, 'y': 0, 'z': 0})
-    # ef.create('text3d', 'Hello 3D', size=5, height=1, position={'x': 90, 'y': 0, 'z': 0})
+    ef.create('box', 10, 10, 10, color=0xff0000)
+    ef.create('sphere', radius=5, widthSegments=8, heightSegments=8, position={'x': 15, 'y': 0, 'z': 0})
+    ef.create('plane', 20, 20, position={'x': 0, 'y': -5, 'z': 0})
+    ef.create('cylinder', radiusTop=3, radiusBottom=3, height=6, position={'x': -15, 'y': 0, 'z': 0})
+    ef.create('cone', radius=3, height=6, position={'x': 30, 'y': 0, 'z': 0})
+    ef.create('torus', radius=4, tube=1, position={'x': 45, 'y': 0, 'z': 0})
+    ef.create('circle', radius=5, position={'x': 60, 'y': 0, 'z': 0})
+    ef.create('ring', innerRadius=2, outerRadius=5, position={'x': 75, 'y': 0, 'z': 0})
+    ef.create('text3d', 'Hello 3D', size=5, height=1, position={'x': 90, 'y': 0, 'z': 0})
+
+    # Line and Figure
+    ef.create('line', position1={'x': 0, 'y': 0, 'z': 0}, position2={'x': 10, 'y': 10, 'z': 0})
+    ef.create('figure', vertices=[0, 0, 0, 5, 0, 0, 0, 5, 0], triangls=[0, 1, 2])
+
+    # Cameras
+    ef.create('camera')
+    ef.create('ortho_camera', left=-5, right=5, top=5, bottom=-5)
+
+    # Lights
+    ef.create('light')
+    ef.create('point_light')
+    ef.create('spot_light')
+    ef.create('ambient')
+    ef.create('hemisphere')
 
     lights = {
             light.name:
