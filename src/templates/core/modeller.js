@@ -270,7 +270,7 @@ class Warehouse{
         gltf.scene.position.set(...Object.values(value.position));
         gltf.scene.rotation.set(...Object.values(value.rotation));
         gltf.scene.scale.set(...Object.values(value.scale));
-
+        gltf.scene.name = key;
         if (value['positional_audio']){
           const _PositionalRadio = new PositionalRadio(THREE, gltf.scene, value['positional_audio'], this._listener);
         }
@@ -303,7 +303,7 @@ class Warehouse{
 
           const line = new THREE.Line( geometry, material );
           this._scene.add( line );
-          
+          line.name = key;
         }
   }
 
@@ -335,7 +335,7 @@ class Warehouse{
               light.shadow.camera.right = value.shadow.camera.right;
               light.shadow.camera.top = value.shadow.camera.top;
               light.shadow.camera.bottom = value.shadow.camera.bottom;
-
+              light.name = key;
               this._scene.add(light);
           }else if (value.light_type == 'AmbientLight'){
               this._scene.add(light);
@@ -364,7 +364,7 @@ class Warehouse{
           if (value.geometry_type === 'TextGeometry') {
               const loader = new FontLoader();
               loader.load(
-                '{{ url_for('static', filename='fonts/helvetiker_rsegular.typeface.json') }}',
+                '{{ url_for("static", filename="fonts/helvetiker_regular.typeface.json") }}',
                 (font) => {
                   const params = { ...value.geometry, font };
                   const text = params.text;
@@ -483,6 +483,7 @@ class Warehouse{
           all_3d_data = recivedDataJson["all_3d_data"]
           _WS.receivedData = null;
         };
+        // draw shape from db event listner
         if (recivedDataJson && recivedDataJson["shape_channel"]) {
             const shapeData = recivedDataJson["shape_channel"]["data"];
             for (const key in shapeData) {
@@ -493,6 +494,22 @@ class Warehouse{
             }
 
             this._LoadEntity(shapeData);
+            _WS.receivedData = null;
+        }
+        // draw model from db event listner
+        if (recivedDataJson && recivedDataJson["model_channel"]) {
+            const modelData = recivedDataJson["model_channel"]["data"];
+            console.log(receivedData);
+            for (const key in modelData) {
+                const existing = this._scene.getObjectByName(key);
+                console.log(key);
+                console.log(this._scene.children)
+                if (existing) {
+                    this._scene.remove(existing);
+                }
+            }
+
+            this._LoadModel(modelData);
             _WS.receivedData = null;
         }
 };
@@ -532,7 +549,7 @@ class Warehouse{
 
         // Load the AudioWorkletProcessor if not already done
         if (!audioProcessorNode) {
-            await audioContext.audioWorklet.addModule('{{ url_for('static', filename='js/audio-processor.js') }}');
+            await audioContext.audioWorklet.addModule('{{ url_for("static", filename="js/audio-processor.js") }}');
             audioProcessorNode = new AudioWorkletNode(audioContext, 'audio-processor');
 
             // Listen for audio data from the processor
