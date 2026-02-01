@@ -364,7 +364,7 @@ class Warehouse{
           if (value.geometry_type === 'TextGeometry') {
               const loader = new FontLoader();
               loader.load(
-                '{{ url_for('static', filename='fonts/helvetiker_regular.typeface.json') }}',
+                '{{ url_for('static', filename='fonts/helvetiker_rsegular.typeface.json') }}',
                 (font) => {
                   const params = { ...value.geometry, font };
                   const text = params.text;
